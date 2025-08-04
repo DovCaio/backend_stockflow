@@ -18,7 +18,7 @@ describe('AppController (e2e)', () => {
   const product3 = { nome: 'Lápis HB', SKU: 'LAP-HB-003', qttMin: 20 };
   const product4 = { nome: 'Borracha branca', SKU: 'BOR-BR-004', qttMin: 15 };
   const product5 = { nome: 'Mochila escolar', SKU: 'MOC-ESC-005', qttMin: 3 };
-  const ids : number[] = []
+  const ids: number[] = [];
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -32,7 +32,6 @@ describe('AppController (e2e)', () => {
     await app.init();
   });
 
-
   afterAll(async () => {
     await prisma.product.deleteMany();
 
@@ -40,65 +39,109 @@ describe('AppController (e2e)', () => {
     await app.close();
   });
 
-  it('/product (POST)', async () => {
-    return await request(app.getHttpServer())
-      .post('/product')
-      .send(product1)
-      .expect(201)
-      .then((response) => {
-        expect(response.body).toHaveProperty('id');
-        expect(response.body.nome).toBe(product1.nome);
-        expect(response.body.SKU).toBe(product1.SKU);
-        expect(response.body.qttMin).toBe(product1.qttMin);
-        ids.push(response.body.id as number)
-      })
-      
-      
+  describe('CRUD', () => {
+    it('/product (POST)', async () => {
+      return await request(app.getHttpServer())
+        .post('/product')
+        .send(product1)
+        .expect(201)
+        .then((response) => {
+          expect(response.body).toHaveProperty('id');
+          expect(response.body.nome).toBe(product1.nome);
+          expect(response.body.SKU).toBe(product1.SKU);
+          expect(response.body.qttMin).toBe(product1.qttMin);
+          ids.push(response.body.id as number);
+        });
+    });
+
+    it('/product (PUT)', async () => {
+      return await request(app.getHttpServer())
+        .put(`/product/${ids[0]}`)
+        .send(product2)
+
+        .expect(200)
+        .then((response) => {
+          expect(response.body).toHaveProperty('id');
+          expect(response.body.id).toBe(ids[0]);
+          expect(response.body.nome).toBe(product2.nome);
+          expect(response.body.SKU).toBe(product2.SKU);
+          expect(response.body.qttMin).toBe(product2.qttMin);
+        });
+    });
+
+    it('/product (GET)', async () => {
+      return await request(app.getHttpServer())
+        .get(`/product/${ids[0]}`)
+
+        .expect(200)
+        .then((response) => {
+          expect(response.body).toHaveProperty('id');
+          expect(response.body.id).toBe(ids[0]);
+          expect(response.body.nome).toBe(product2.nome);
+          expect(response.body.SKU).toBe(product2.SKU);
+          expect(response.body.qttMin).toBe(product2.qttMin);
+        });
+    });
+
+    it('/product (DELETE)', async () => {
+      return await request(app.getHttpServer())
+        .delete(`/product/${ids[0]}`)
+
+        .expect(204);
+    });
   });
 
+  describe('Controle de entrada e saída', () => {
+    it('/product (GET) ALL', async () => {
+      return await request(app.getHttpServer())
+        .get(`/product`)
+        .expect(200)
+        .then((response) => {
+          expect(response.body.length).toBe(1);
+        });
+    });
 
-  it('/product (PUT)', async () => {
-    return await request(app.getHttpServer())
-      .put(`/product/${ids[0]}`)
-      .send(product2)
+    it('/product/qtt-min (GET) pegar a quantidade de um produto apartir do id', async () => {
+      return await request(app.getHttpServer())
+        .get(`/product/qtt-min/${ids[0]}`)
+        .expect(200)
+        .then((response) => {
+          expect(response.body.qttMin).toBe(product2.qttMin);
+        });
+    });
 
-      .expect(200)
-      .then((response) => {
+    it('/product/historic (GET) pega o último valor do historico', async () =>{
+      return await request(app.getHttpServer())
+        .get(`/product/historic`)
+        .expect(200)
+        .then((response) => {
+          const lastHistoric = response.body.length - 1
+          expect(response.body.length).toBe(1)
+          expect(response.body[lastHistoric].message).toBe(`Pega a quantidade de produtos do ${product2.nome} que era ${product2.qttMin}`);
+        });
+    })
+    it('/product/qtt-min (PUT) mudar a quantidade de um produto apartir do id', async () => {
+      return await request(app.getHttpServer())
+        .put(`/product/qtt-min/${ids[0]}`)
+        .send({ qttMin: 5 })
+        .expect(200)
+        .then((response) => {
         
-        expect(response.body).toHaveProperty('id');
-        expect(response.body.id).toBe(ids[0]);
-        expect(response.body.nome).toBe(product2.nome);
-        expect(response.body.SKU).toBe(product2.SKU);
-        expect(response.body.qttMin).toBe(product2.qttMin);
+          expect(response.body.qttMin).toBe(5);
+        });
+    });
 
-      })
-      
+
+    it('/product/historic (GET) pega o último valor do historico', async () =>{
+      return await request(app.getHttpServer())
+        .get(`/product/historic`)
+        .expect(200)
+        .then((response) => {
+          const lastHistoric = response.body.length - 1
+          expect(response.body.length).toBe(2)
+          expect(response.body[lastHistoric].message).toBe(`Alterada a quantidade de produtos do ${product2.nome} que era ${product2.qttMin} para ${5}`);
+        });
+    })
+
   });
-
-
-  it('/product (GET)', async () => {
-    return await request(app.getHttpServer())
-      .get(`/product/${ids[0]}`)
-
-      .expect(200)
-      .then((response) => {
-        expect(response.body).toHaveProperty('id');
-        expect(response.body.id).toBe(ids[0]);
-        expect(response.body.nome).toBe(product2.nome);
-        expect(response.body.SKU).toBe(product2.SKU);
-        expect(response.body.qttMin).toBe(product2.qttMin);
-
-      })
-      
-  });
-
-
-  it('/product (DELETE)', async () => {
-    return await request(app.getHttpServer())
-      .delete(`/product/${ids[0]}`)
-
-      .expect(204)
-      
-  });
-
 });
