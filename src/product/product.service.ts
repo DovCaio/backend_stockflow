@@ -4,52 +4,59 @@ import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class ProductService {
+  constructor(private readonly prisma: PrismaService) {}
 
-    constructor( private readonly prisma: PrismaService){}
+  async save(product: Product): Promise<Product | null> {
+    return this.prisma.product.create({
+      data: product,
+    });
+  }
 
-    async save(product : Product) : Promise<Product | null>{
+  async update(id: number, product: Product): Promise<Product | null> {
+    const { nome, SKU, qttMin } = product;
 
-        return this.prisma.product.create({
-            data: product
-                
-        })
+    return this.prisma.product.update({
+      where: {
+        id,
+      },
+      data: {
+        nome,
+        SKU,
+        qttMin,
+      },
+    });
+  }
 
-    }
+  async get(id: number): Promise<Product | null> {
+    return this.prisma.product.findUnique({
+      where: {
+        id,
+      },
+    });
+  }
 
-    async update(id:number, product: Product) : Promise<Product | null> {
+  async delete(id: number): Promise<Product | null> {
+    return this.prisma.product.delete({
+      where: {
+        id,
+      },
+    });
+  }
 
-        const { nome, SKU, qttMin} = product;
-
-        return this.prisma.product.update({
-            where: {
-                id
-            },
-            data: {
-                nome,
-                SKU,
-                qttMin
-
-            }
-        })
-
-    }
+  async getAll(): Promise<Product[] | null> {
+    return this.prisma.product.findMany();
+  }
 
 
-    async get(id:number) : Promise<Product | null> {
-        return this.prisma.product.findUnique({
-            where: {
-                id
-            }
-        })
-    }
+  async getQttMinById(id: number) : Promise<{qttMin: number | null | undefined}> {
 
-    async delete(id:number) :Promise<Product | null> {
 
-        return this.prisma.product.delete({
-            where: {
-                id
-            }
-        })
 
-    }
+    const prod = await this.prisma.product.findUnique({
+        where: {
+            id
+        }
+    })
+    return {qttMin: prod?.qttMin}
+  }
 }

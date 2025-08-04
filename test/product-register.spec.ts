@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
+import { ConsoleLogger, INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from '../src/app.module';
@@ -92,6 +92,16 @@ describe('AppController (e2e)', () => {
   });
 
   describe('Controle de entrada e saída', () => {
+
+    beforeAll(async () => {
+      const prod = await prisma.product.create({
+        data: product3
+      })
+
+      ids.push(prod.id)
+      
+    })
+
     it('/product (GET) ALL', async () => {
       return await request(app.getHttpServer())
         .get(`/product`)
@@ -102,11 +112,12 @@ describe('AppController (e2e)', () => {
     });
 
     it('/product/qtt-min (GET) pegar a quantidade de um produto apartir do id', async () => {
+      console.log("AQUIIIIII", ids)
       return await request(app.getHttpServer())
-        .get(`/product/qtt-min/${ids[0]}`)
+        .get(`/product/qtt-min/${ids[1]}`)
         .expect(200)
         .then((response) => {
-          expect(response.body.qttMin).toBe(product2.qttMin);
+          expect(response.body.qttMin).toBe(product3.qttMin);
         });
     });
 
@@ -117,12 +128,12 @@ describe('AppController (e2e)', () => {
         .then((response) => {
           const lastHistoric = response.body.length - 1
           expect(response.body.length).toBe(1)
-          expect(response.body[lastHistoric].message).toBe(`Pega a quantidade de produtos do ${product2.nome} que era ${product2.qttMin}`);
+          expect(response.body[lastHistoric].message).toBe(`Pega a quantidade de produtos do ${product3.nome} que era ${product3.qttMin}`);
         });
     })
     it('/product/qtt-min (PUT) mudar a quantidade de um produto apartir do id', async () => {
       return await request(app.getHttpServer())
-        .put(`/product/qtt-min/${ids[0]}`)
+        .put(`/product/qtt-min/${ids[1]}`)
         .send({ qttMin: 5 })
         .expect(200)
         .then((response) => {
@@ -139,7 +150,7 @@ describe('AppController (e2e)', () => {
         .then((response) => {
           const lastHistoric = response.body.length - 1
           expect(response.body.length).toBe(2)
-          expect(response.body[lastHistoric].message).toBe(`Alterada a quantidade de produtos do ${product2.nome} que era ${product2.qttMin} para ${5}`);
+          expect(response.body[lastHistoric].message).toBe(`Alterada a quantidade de produtos do ${product3.nome} que era ${product3.qttMin} para ${5}`);
         });
     })
 
