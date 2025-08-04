@@ -7,7 +7,7 @@ export class ProductService {
 
     constructor( private readonly prisma: PrismaService){}
 
-    async saveAProducts(product : Product) : Promise<Product | null>{
+    async save(product : Product) : Promise<Product | null>{
 
         return this.prisma.product.create({
             data: product
@@ -16,4 +16,40 @@ export class ProductService {
 
     }
 
+    async update(id:number, product: Product) : Promise<Product | null> {
+
+        const { nome, SKU, qttMin} = product;
+
+        return this.prisma.product.update({
+            where: {
+                id
+            },
+            data: {
+                nome,
+                SKU,
+                qttMin
+
+            }
+        })
+
+    }
+
+
+    async get(id:number) : Promise<Product | null> {
+        return this.prisma.product.findUnique({
+            where: {
+                id
+            }
+        })
+    }
+
+    async delete(id:number) :Promise<Product | null> {
+
+        return this.prisma.product.delete({
+            where: {
+                id
+            }
+        })
+
+    }
 }

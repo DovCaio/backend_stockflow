@@ -1,10 +1,13 @@
+import { IsInt, IsString } from "class-validator";
 
 
-export interface Product {
+export class Product {
 
-
+    @IsString()
     nome: string;
+    @IsString()
     SKU: string;
+    @IsInt()
     qttMin: number;
 
 }

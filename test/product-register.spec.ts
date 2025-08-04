@@ -29,17 +29,19 @@ describe('AppController (e2e)', () => {
 
     prisma = app.get(PrismaService);
 
-    await prisma.product.deleteMany();
     await app.init();
   });
 
+
   afterAll(async () => {
+    await prisma.product.deleteMany();
+
     await prisma.$disconnect();
     await app.close();
   });
 
-  it('/product (POST)', () => {
-    return request(app.getHttpServer())
+  it('/product (POST)', async () => {
+    return await request(app.getHttpServer())
       .post('/product')
       .send(product1)
       .expect(201)
@@ -55,13 +57,14 @@ describe('AppController (e2e)', () => {
   });
 
 
-  it('/product (PUT)', () => {
-    return request(app.getHttpServer())
+  it('/product (PUT)', async () => {
+    return await request(app.getHttpServer())
       .put(`/product/${ids[0]}`)
       .send(product2)
 
       .expect(200)
       .then((response) => {
+        
         expect(response.body).toHaveProperty('id');
         expect(response.body.id).toBe(ids[0]);
         expect(response.body.nome).toBe(product2.nome);
@@ -73,8 +76,8 @@ describe('AppController (e2e)', () => {
   });
 
 
-  it('/product (GET)', () => {
-    return request(app.getHttpServer())
+  it('/product (GET)', async () => {
+    return await request(app.getHttpServer())
       .get(`/product/${ids[0]}`)
 
       .expect(200)
@@ -90,8 +93,8 @@ describe('AppController (e2e)', () => {
   });
 
 
-  it('/product (PUT)', () => {
-    return request(app.getHttpServer())
+  it('/product (DELETE)', async () => {
+    return await request(app.getHttpServer())
       .delete(`/product/${ids[0]}`)
 
       .expect(204)
