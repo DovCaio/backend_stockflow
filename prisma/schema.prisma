@@ -17,6 +17,6 @@ datasource db {
 model Product {
   id Int @default(autoincrement()) @id
   nome String
-  SKW String
+  SKU String
   qttMin Int 
 }

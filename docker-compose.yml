@@ -7,8 +7,6 @@ services:
       POSTGRES_USER: stockflow
       POSTGRES_PASSWORD: senhasecreta
       POSTGRES_DB: stockflow_db
-    volumes:
-      - pgdata:/var/lib/postgresql/data
     networks:
       - stockflow-network
 
@@ -24,7 +22,3 @@ services:
       - stockflow-network
 networks:
   stockflow-network:
-
-volumes:
-  pgdata:
-
