@@ -133,17 +133,42 @@ Remove um produto pelo `id`.
 **Exemplo:**  
 `DELETE http://localhost:3000/product/1`
 
----
-
-## ✅ Exemplo de Teste com curl
-
-```bash
-curl -X POST http://localhost:3000/product \
--H "Content-Type: application/json" \
--d '{"nome":"Produto Teste","sku":"TEST123","qttMin":7}'
-```
+### 🔍 Obter todos os produtos
+GET /product
+Retorna uma lista com todos os produtos cadastrados.
 
 ---
+
+### 🔍 Obter a quantidade (`qtt`) de um produto
+GET /product/qtt/:id
+
+Parâmetros:
+- id (number): ID do produto.
+
+Retorna a quantidade atual (`qtt`) do produto com o ID fornecido.
+
+---
+
+### 🔄 Atualizar a quantidade (`qtt`) de um produto
+PUT /product/qtt/:id/:newqtt
+
+Parâmetros:
+- id (number): ID do produto.
+- newqtt (number): Nova quantidade a ser atribuída.
+
+Atualiza a quantidade do produto com o ID fornecido para o novo valor especificado.
+
+---
+
+### 🕘 Obter histórico de um produto
+GET /product/historic/:prodId
+
+Parâmetros:
+- prodId (number): ID do produto.
+
+Retorna todos os registros de histórico associados ao produto.
+
+___
 
 ## 📄 Licença
 
