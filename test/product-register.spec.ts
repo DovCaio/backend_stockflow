@@ -29,11 +29,12 @@ describe('AppController (e2e)', () => {
     app = moduleFixture.createNestApplication();
 
     prisma = app.get(PrismaService);
-
+    
     await app.init();
   });
 
   afterAll(async () => {
+    await prisma.historic.deleteMany();
     await prisma.product.deleteMany();
 
     await prisma.$disconnect();
@@ -116,7 +117,6 @@ describe('AppController (e2e)', () => {
     });
 
     it('/product/qtt (GET) pegar a quantidade de um produto apartir do id', async () => {
-      console.log("AQUIIIIII", ids)
       return await request(app.getHttpServer())
         .get(`/product/qtt/${ids[1]}`)
         .expect(200)
@@ -132,29 +132,28 @@ describe('AppController (e2e)', () => {
         .then((response) => {
           const lastHistoric = response.body.length - 1
           expect(response.body.length).toBe(1)
-          expect(response.body[lastHistoric].message).toBe(`Péga a quantidade de produtos do ${product3.nome} que era ${product3.qttMin}`);
+          expect(response.body[lastHistoric].log).toBe(`Recuperado o produto ${product3.nome} com a quantidade ${product3.qtt}`);
         });
     })
     it('/product/qtt (PUT) mudar a quantidade de um produto apartir do id', async () => {
       return await request(app.getHttpServer())
-        .put(`/product/qtt/${ids[1]}`)
-        .send({ qttMin: 5 })
+        .put(`/product/qtt/${ids[1]}/30`)
         .expect(200)
         .then((response) => {
         
-          expect(response.body.qttMin).toBe(5);
+          expect(response.body.qtt).toBe(30);
         });
     });
 
 
-    it('/product/historic (GET) pega o último valor do historico', async () =>{
+    it('/product/historic (GET) pega o último valor do historico de um produto, tem que ter sido alterado', async () =>{
       return await request(app.getHttpServer())
-        .get(`/product/historic`)
+        .get(`/product/historic/${ids[1]}`)
         .expect(200)
         .then((response) => {
           const lastHistoric = response.body.length - 1
           expect(response.body.length).toBe(2)
-          expect(response.body[lastHistoric].message).toBe(`Alterada a quantidade de produtos do ${product3.nome} que era ${product3.qttMin} para ${5}`);
+          expect(response.body[lastHistoric].log).toBe(`Alterado o produto ${product3.nome} com a quantidade ${product3.qttMin} para ${30}`);
         });
     })
 

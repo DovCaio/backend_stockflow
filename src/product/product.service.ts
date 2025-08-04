@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Product } from 'src/models/Product';
 import { PrismaService } from '../prisma/prisma.service';
 import { logsPatherns } from '../utils/logs-pathern';
+import { Historic } from '@prisma/client';
 @Injectable()
 export class ProductService {
   constructor(private readonly prisma: PrismaService) {}
@@ -37,7 +38,14 @@ export class ProductService {
   }
 
   async delete(id: number): Promise<Product | null> {
-    return this.prisma.product.delete({
+
+    await this.prisma.historic.deleteMany({
+      where: {
+        productId: id
+      }
+    })
+
+    return await this.prisma.product.delete({
       where: {
         id,
       },
@@ -62,14 +70,42 @@ export class ProductService {
     return {qtt: prod?.qtt}
   }
 
+  async putQttById(prodId: number, newQtt: number){
+
+    const prod = await this.prisma.product.findUnique({
+      where : {
+        id: prodId
+      },
+      select : {
+        qtt : true,
+        nome: true
+      }
+    })
+    
+
+    const updateQtt = await this.prisma.product.update({
+      where: {
+        id: prodId
+      },
+      data: {
+        qtt:newQtt                
+      }
+    }) 
+
+    this.createNewHistoric(prodId, logsPatherns("update", {nome: prod?.nome, qtt: prod?.qtt, newQtt}))
+
+    return updateQtt
+
+  }
+
   //Histórico
 
-  async createNewHistoric(prodId:number, log : string) : Promise<any | null>{
+  private async createNewHistoric(prodId:number, log : string) : Promise<any | null>{
 
 
     const prod = await this.prisma.product.findUnique({
     where: { id: prodId },
-    select: { qttMin: true } // mais leve
+    select: { qtt: true } // mais leve
   });
 
   if (!prod) return null;
@@ -78,10 +114,20 @@ export class ProductService {
     data: {
       log,
       productId: prodId,
-      qttMin: prod.qttMin
+      qttMin: prod.qtt
     }
   });
 
   return historic;
   } 
+
+  async getProductHistorics(prodId: number) : Promise<Historic[] | null>{
+
+    return this.prisma.historic.findMany({
+      where: {
+        productId : prodId
+      }
+    })
+
+  }
 }

@@ -53,11 +53,23 @@ export class ProductController {
 
 
   @Get("/qtt/:id")
-  getQttMin(@Param("id",ParseIntPipe) id:number){
+  getQtt(@Param("id",ParseIntPipe) id:number){
     return this.productService.getQttById(id)
+  }
+
+
+  @Put("/qtt/:id/:newqtt")
+  putQtt(@Param("id",ParseIntPipe) id:number, @Param("newqtt",ParseIntPipe) newQtt: number){
+    return this.productService.putQttById(id, newQtt)
   }
 
   //Histórico
 
+  @Get("/historic/:prodId")
+  getProductHistorics(@Param("prodId", ParseIntPipe) id:number){
+
+    return this.productService.getProductHistorics(id);
+
+  }
   
 }
