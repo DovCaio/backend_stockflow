@@ -9,5 +9,7 @@ export class Product {
     SKU: string;
     @IsInt()
     qttMin: number;
+    @IsInt()
+    qtt: number;
 
 }

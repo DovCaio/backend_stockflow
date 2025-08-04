@@ -52,8 +52,12 @@ export class ProductController {
   } 
 
 
-  @Get("/qtt-min/:id")
+  @Get("/qtt/:id")
   getQttMin(@Param("id",ParseIntPipe) id:number){
-    return this.productService.getQttMinById(id)
+    return this.productService.getQttById(id)
   }
+
+  //Histórico
+
+  
 }

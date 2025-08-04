@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Product } from 'src/models/Product';
 import { PrismaService } from '../prisma/prisma.service';
-
+import { logsPatherns } from '../utils/logs-pathern';
 @Injectable()
 export class ProductService {
   constructor(private readonly prisma: PrismaService) {}
@@ -13,7 +13,7 @@ export class ProductService {
   }
 
   async update(id: number, product: Product): Promise<Product | null> {
-    const { nome, SKU, qttMin } = product;
+    const { nome, SKU, qttMin, qtt } = product;
 
     return this.prisma.product.update({
       where: {
@@ -23,6 +23,7 @@ export class ProductService {
         nome,
         SKU,
         qttMin,
+        qtt
       },
     });
   }
@@ -48,15 +49,39 @@ export class ProductService {
   }
 
 
-  async getQttMinById(id: number) : Promise<{qttMin: number | null | undefined}> {
-
-
+  async getQttById(id: number) : Promise<{qtt: number | null | undefined}> {
 
     const prod = await this.prisma.product.findUnique({
         where: {
             id
         }
     })
-    return {qttMin: prod?.qttMin}
+
+    this.createNewHistoric(id, logsPatherns("get", {nome: prod?.nome, qtt:prod?.qttMin}))
+
+    return {qtt: prod?.qtt}
   }
+
+  //Histórico
+
+  async createNewHistoric(prodId:number, log : string) : Promise<any | null>{
+
+
+    const prod = await this.prisma.product.findUnique({
+    where: { id: prodId },
+    select: { qttMin: true } // mais leve
+  });
+
+  if (!prod) return null;
+
+  const historic = await this.prisma.historic.create({
+    data: {
+      log,
+      productId: prodId,
+      qttMin: prod.qttMin
+    }
+  });
+
+  return historic;
+  } 
 }
