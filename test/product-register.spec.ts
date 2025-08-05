@@ -166,9 +166,22 @@ describe('AppController (e2e)', () => {
         .get(`/product/${ids[1]}/historic/export/json`)
         .expect(200)
         .expect("Content-Type", /json/)
-        .expect("Content-Disposition", /attachment/)
+        .expect('Content-Disposition', `attachment; filename="historic-${ids[1]}.json"`);
 
       expect(response.text).toContain(`"productId": ${ids[1]}`)
+      //Caberia colocar mais testes sobre o hitórico aqui.
+    })
+
+    it("/product/{id}/historic/export/csv (GET) deve baixar o histórico do produto em csv", async () => {
+      const response = await request(app.getHttpServer())
+        .get(`/product/${ids[1]}/historic/export/csv`)
+        .expect(200)
+        .expect("Content-Type", /text\/csv/)
+        .expect('Content-Disposition', `attachment; filename="historic-${ids[1]}.csv"`);
+
+      expect(response.text).toMatch(/id,log,qttMin,creatAt,productId/i) //se tem o head
+      expect(response.text).toContain(`"productId": ${ids[1]}`)
+
       //Caberia colocar mais testes sobre o hitórico aqui.
     })
 
