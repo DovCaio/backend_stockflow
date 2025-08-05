@@ -8,11 +8,13 @@ import {
   ParseIntPipe,
   Post,
   Put,
+  Res,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
 import { ProductService } from './product.service';
 import { Product } from '../models/Product';
+import { Response } from 'express';
 
 @Controller('product')
 @UsePipes(new ValidationPipe({ whitelist: true }))
@@ -71,5 +73,21 @@ export class ProductController {
     return this.productService.getProductHistorics(id);
 
   }
+
+  //Exportação de hitórico
   
+  @Get("/:prodId/historic/export/json")
+  async getHistoricJson(@Param("prodId", ParseIntPipe) id:number, @Res() res: Response){
+    const historic = await this.productService.getJsonHistoric(id)
+    const jsonBuffer = Buffer.from(JSON.stringify(historic, null,2), 'utf-8')
+
+    res.set({
+      'Content-Type': 'application/json',
+      'Content-Disposition': `attachment; filename="historic-${id}.json"`,
+      'Content-Length': jsonBuffer.length,
+    });
+    return res.send(jsonBuffer)
+  }
+
+
 }

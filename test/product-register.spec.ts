@@ -158,4 +158,19 @@ describe('AppController (e2e)', () => {
     })
 
   });
+
+  describe("Exportacao de histórico", () => {
+
+    it("/product/{id}/historic/export/json (GET) deve baixar o histórico do produto em json", async () => {
+      const response = await request(app.getHttpServer())
+        .get(`/product/${ids[1]}/historic/export/json`)
+        .expect(200)
+        .expect("Content-Type", /json/)
+        .expect("Content-Disposition", /attachment/)
+
+      expect(response.text).toContain(`"productId": ${ids[1]}`)
+      //Caberia colocar mais testes sobre o hitórico aqui.
+    })
+
+  })
 });
