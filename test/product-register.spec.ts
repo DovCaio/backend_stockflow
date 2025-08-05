@@ -175,13 +175,23 @@ describe('AppController (e2e)', () => {
     it("/product/{id}/historic/export/csv (GET) deve baixar o histórico do produto em csv", async () => {
       const response = await request(app.getHttpServer())
         .get(`/product/${ids[1]}/historic/export/csv`)
+        .buffer(true)
+        .parse((res, callback) => {
+        let data = '';
+        res.on('data', chunk => {
+          data += chunk;
+        });
+        res.on('end', () => {
+          callback(null, data);
+        });
+      })
         .expect(200)
         .expect("Content-Type", /text\/csv/)
         .expect('Content-Disposition', `attachment; filename="historic-${ids[1]}.csv"`);
-
-      expect(response.text).toMatch(/id,log,qttMin,creatAt,productId/i) //se tem o head
-      expect(response.text).toContain(`"productId": ${ids[1]}`)
-
+      expect(response.body).toMatch("\"id\",\"log\",\"qttMin\",\"creatAt\",\"productId\"") //se tem o head
+      expect(response.body).toContain(`Recuperado o produto ${product3.nome} com a quantidade ${product3.qtt}`)
+      expect(response.body).toContain(`Alterado o produto ${product3.nome} com a quantidade ${product3.qttMin} para ${30}`)
+      
       //Caberia colocar mais testes sobre o hitórico aqui.
     })
 

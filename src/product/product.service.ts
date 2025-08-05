@@ -131,18 +131,5 @@ export class ProductService {
 
   }
 
-  //Exportação de hitórico
 
-  getJsonHistoric(id:number) {
-
-    return this.prisma.historic.findMany({
-
-      where: {
-        productId: id
-
-      }
-
-    })
-
-  }
 }

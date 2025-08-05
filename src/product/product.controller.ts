@@ -15,6 +15,7 @@ import {
 import { ProductService } from './product.service';
 import { Product } from '../models/Product';
 import { Response } from 'express';
+import { Parser } from 'json2csv';
 
 @Controller('product')
 @UsePipes(new ValidationPipe({ whitelist: true }))
@@ -78,7 +79,7 @@ export class ProductController {
   
   @Get("/:prodId/historic/export/json")
   async getHistoricJson(@Param("prodId", ParseIntPipe) id:number, @Res() res: Response){
-    const historic = await this.productService.getJsonHistoric(id)
+    const historic = await this.productService.getProductHistorics(id)
     const jsonBuffer = Buffer.from(JSON.stringify(historic, null,2), 'utf-8')
 
     res.set({
@@ -87,6 +88,21 @@ export class ProductController {
       'Content-Length': jsonBuffer.length,
     });
     return res.send(jsonBuffer)
+  }
+
+  @Get("/:prodId/historic/export/csv")
+  async getHistoricCsv(@Param("prodId", ParseIntPipe) id:number, @Res() res: Response){
+    const historic = await this.productService.getProductHistorics(id)
+    const parse = new Parser({header: true})
+    const csv = parse.parse(historic)
+
+    const buffer = Buffer.from(csv, "utf-8")
+    res.set({
+      'Content-Type': 'text/csv',
+      'Content-Disposition': `attachment; filename="historic-${id}.csv"`,
+      'Content-Length': buffer.length,
+    });
+    return res.send(buffer)
   }
 
 
