@@ -3,6 +3,9 @@ import { Product } from 'src/models/Product';
 import { PrismaService } from '../prisma/prisma.service';
 import { logsPatherns } from '../utils/logs-pathern';
 import { Historic } from '@prisma/client';
+import { Response } from 'express';
+import { Parser } from 'json2csv';
+
 @Injectable()
 export class ProductService {
   constructor(private readonly prisma: PrismaService) {}
@@ -130,4 +133,37 @@ export class ProductService {
     })
 
   }
+
+  //Exportação de histórico
+
+  async exportHistoricJson(prodId:number, res: Response) {
+
+    const historic = await this.getProductHistorics(prodId)
+    const jsonBuffer = Buffer.from(JSON.stringify(historic, null,2), 'utf-8')
+
+    res.set({
+      'Content-Type': 'application/json',
+      'Content-Disposition': `attachment; filename="historic-${prodId}.json"`,
+      'Content-Length': jsonBuffer.length,
+    });
+    return res.send(jsonBuffer)
+
+  }
+
+  async exportHistoricCsv(prodId:number, res: Response) {
+
+    const historic = await this.getProductHistorics(prodId)
+    const parse = new Parser({header: true})
+    const csv = parse.parse(historic)
+
+    const buffer = Buffer.from(csv, "utf-8")
+    res.set({
+      'Content-Type': 'text/csv',
+      'Content-Disposition': `attachment; filename="historic-${prodId}.csv"`,
+      'Content-Length': buffer.length,
+    });
+    return res.send(buffer)
+
+  }
+
 }
