@@ -1,7 +1,7 @@
 export interface Historic {
   id: number;
   log: string;
-  qttMin: number;
+  currentStock: number;
   creatAt: Date;
   productId: number;
 }

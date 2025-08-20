@@ -12,22 +12,25 @@ export class ProductService {
 
   async save(product: Product): Promise<Product | null> {
     return this.prisma.product.create({
-      data: product,
+      data: product,  
     });
   }
 
   async update(id: number, product: Product): Promise<Product | null> {
-    const { nome, SKU, qttMin, qtt } = product;
+    const { name, sku, minimumStock, currentStock, category, description, price} = product;
 
     return this.prisma.product.update({
       where: {
         id,
       },
       data: {
-        nome,
-        SKU,
-        qttMin,
-        qtt
+        name,
+        sku,
+        minimumStock,
+        currentStock,
+        category,
+        description,
+        price
       },
     });
   }
@@ -68,9 +71,9 @@ export class ProductService {
         }
     })
 
-    this.createNewHistoric(id, logsPatherns("get", {nome: prod?.nome, qtt:prod?.qttMin}))
+    this.createNewHistoric(id, logsPatherns("get", {nome: prod?.name, currentStock:prod?.minimumStock}))
 
-    return {qtt: prod?.qtt}
+    return {qtt: prod?.currentStock}
   }
 
   async putQttById(prodId: number, newQtt: number){
@@ -80,8 +83,8 @@ export class ProductService {
         id: prodId
       },
       select : {
-        qtt : true,
-        nome: true
+        currentStock : true,
+        name: true
       }
     })
     
@@ -91,11 +94,11 @@ export class ProductService {
         id: prodId
       },
       data: {
-        qtt:newQtt                
+        currentStock:newQtt                
       }
     }) 
 
-    this.createNewHistoric(prodId, logsPatherns("update", {nome: prod?.nome, qtt: prod?.qtt, newQtt}))
+    this.createNewHistoric(prodId, logsPatherns("update", {nome: prod?.name, currentStock: prod?.currentStock, newQtt}))
 
     return updateQtt
 
@@ -108,7 +111,7 @@ export class ProductService {
 
     const prod = await this.prisma.product.findUnique({
     where: { id: prodId },
-    select: { qtt: true } // mais leve
+    select: { currentStock: true } // mais leve
   });
 
   if (!prod) return null;
@@ -117,7 +120,8 @@ export class ProductService {
     data: {
       log,
       productId: prodId,
-      qttMin: prod.qtt
+      currentStock: prod.currentStock,
+      
     }
   });
 
