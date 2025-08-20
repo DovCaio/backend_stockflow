@@ -7,8 +7,28 @@ services:
       POSTGRES_USER: stockflow
       POSTGRES_PASSWORD: senhasecreta
       POSTGRES_DB: stockflow_db
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U stockflow -d stockflow_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     networks:
       - stockflow-network
+  backend-db:
+    build:
+      context: .
+      target: test
+    ports:
+        - "3001:3000"
+    command: /bin/sh -c "npx prisma migrate deploy && npm run test:e2e"
+    depends_on:
+      dev-db:
+        condition: service_healthy
+
+    networks:
+       - stockflow-network
+    environment:
+       - DATABASE_URL=postgresql://stockflow:senhasecreta@dev-db:5432/stockflow_db?schema=public
 
 networks:
   stockflow-network:
