@@ -9,17 +9,54 @@ import { Product } from '../src/models/Product';
 describe('AppController (e2e)', () => {
   let app: INestApplication<App>;
   let prisma: PrismaService;
-  const product1 = { nome: 'Caneta Azul', SKU: 'CAN-AZ-001', qttMin: 10, qtt:15 };
-  const product2 = {
-    nome: 'Caderno 100 folhas',
-    SKU: 'CAD-100-002',
-    qttMin: 5,
-    qtt: 16
-  };
-  const product3 = { nome: 'Lápis HB', SKU: 'LAP-HB-003', qttMin: 20, qtt: 20};
-  const product4 = { nome: 'Borracha branca', SKU: 'BOR-BR-004', qttMin: 15, qtt:17 };
-  const product5 = { nome: 'Mochila escolar', SKU: 'MOC-ESC-005', qttMin: 3 , qtt: 19};
-  const ids: number[] = [];
+  const products: Product[] = [
+  {
+    name: "Notebook Dell Inspiron 15",
+    sku: "NB-DEL-001",
+    minimumStock: 5,
+    currentStock: 20,
+    description: "Notebook Dell Inspiron com Intel i5, 8GB RAM e 256GB SSD.",
+    category: "Eletrônicos",
+    price: 3599.90
+  },
+  {
+    name: "Mouse Gamer Logitech G502",
+    sku: "MOU-LOG-002",
+    minimumStock: 10,
+    currentStock: 50,
+    description: "Mouse gamer com sensor HERO 25K, 11 botões programáveis.",
+    category: "Periféricos",
+    price: 299.99
+  },
+  {
+    name: "Cadeira Gamer ThunderX3",
+    sku: "CAD-THU-003",
+    minimumStock: 2,
+    currentStock: 8,
+    description: "Cadeira ergonômica com ajustes completos e apoio para braços 3D.",
+    category: "Móveis",
+    price: 1299.00
+  },
+  {
+    name: "Monitor LG Ultrawide 29''",
+    sku: "MON-LG-004",
+    minimumStock: 3,
+    currentStock: 12,
+    description: "Monitor LG Ultrawide 29 polegadas, resolução 2560x1080.",
+    category: "Eletrônicos",
+    price: 1599.50
+  },
+  {
+    name: "Teclado Mecânico Redragon Kumara",
+    sku: "TEC-RED-005",
+    minimumStock: 7,
+    currentStock: 30,
+    description: "Teclado mecânico com switches Outemu Blue e iluminação RGB.",
+    category: "Periféricos",
+    price: 249.90
+  }
+];
+
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -40,19 +77,20 @@ describe('AppController (e2e)', () => {
     await prisma.$disconnect();
     await app.close();
   });
+    const ids : number[] = []
 
   describe('CRUD', () => {
     it('/product (POST)', async () => {
       return await request(app.getHttpServer())
         .post('/product')
-        .send(product1)
+        .send(products[0])
         .expect(201)
         .then((response) => {
           expect(response.body).toHaveProperty('id');
-          expect(response.body.nome).toBe(product1.nome);
-          expect(response.body.SKU).toBe(product1.SKU);
-          expect(response.body.qttMin).toBe(product1.qttMin);
-          expect(response.body.qtt).toBe(product1.qtt);
+          expect(response.body.name).toBe(products[0].name);
+          expect(response.body.sku).toBe(products[0].sku);
+          expect(response.body.minimumStock).toBe(products[0].minimumStock);
+          expect(response.body.currentStock).toBe(products[0].currentStock);
           ids.push(response.body.id as number);
         });
     });
@@ -60,16 +98,16 @@ describe('AppController (e2e)', () => {
     it('/product (PUT)', async () => {
       return await request(app.getHttpServer())
         .put(`/product/${ids[0]}`)
-        .send(product2)
+        .send(products[1])
 
         .expect(200)
         .then((response) => {
           expect(response.body).toHaveProperty('id');
           expect(response.body.id).toBe(ids[0]);
-          expect(response.body.nome).toBe(product2.nome);
-          expect(response.body.SKU).toBe(product2.SKU);
-          expect(response.body.qttMin).toBe(product2.qttMin);
-          expect(response.body.qtt).toBe(product2.qtt);
+          expect(response.body.name).toBe(products[1].name);
+          expect(response.body.sku).toBe(products[1].sku);
+          expect(response.body.minimumStock).toBe(products[1].minimumStock);
+          expect(response.body.currentStock).toBe(products[1].currentStock);
         });
     });
 
@@ -81,10 +119,10 @@ describe('AppController (e2e)', () => {
         .then((response) => {
           expect(response.body).toHaveProperty('id');
           expect(response.body.id).toBe(ids[0]);
-          expect(response.body.nome).toBe(product2.nome);
-          expect(response.body.SKU).toBe(product2.SKU);
-          expect(response.body.qttMin).toBe(product2.qttMin);
-          expect(response.body.qtt).toBe(product2.qtt);
+          expect(response.body.name).toBe(products[1].name);
+          expect(response.body.sku).toBe(products[1].sku);
+          expect(response.body.minimumStock).toBe(products[1].minimumStock);
+          expect(response.body.currentStock).toBe(products[1].currentStock);
         });
     });
 
@@ -100,7 +138,7 @@ describe('AppController (e2e)', () => {
 
     beforeAll(async () => {
       const prod = await prisma.product.create({
-        data: product3
+        data: products[2]
       })
 
       ids.push(prod.id)
@@ -121,7 +159,7 @@ describe('AppController (e2e)', () => {
         .get(`/product/qtt/${ids[1]}`)
         .expect(200)
         .then((response) => {
-          expect(response.body.qtt).toBe(product3.qtt);
+          expect(response.body.qtt).toBe(products[2].currentStock);
         });
     });
 
@@ -132,7 +170,7 @@ describe('AppController (e2e)', () => {
         .then((response) => {
           const lastHistoric = response.body.length - 1
           expect(response.body.length).toBe(1)
-          expect(response.body[lastHistoric].log).toBe(`Recuperado o produto ${product3.nome} com a quantidade ${product3.qtt}`);
+          expect(response.body[lastHistoric].log).toBe(`Recuperado o produto ${products[2].name} com a quantidade ${products[2].minimumStock}`);
         });
     })
     it('/product/qtt (PUT) mudar a quantidade de um produto apartir do id', async () => {
@@ -141,7 +179,7 @@ describe('AppController (e2e)', () => {
         .expect(200)
         .then((response) => {
         
-          expect(response.body.qtt).toBe(30);
+          expect(response.body.currentStock).toBe(30);
         });
     });
 
@@ -153,7 +191,7 @@ describe('AppController (e2e)', () => {
         .then((response) => {
           const lastHistoric = response.body.length - 1
           expect(response.body.length).toBe(2)
-          expect(response.body[lastHistoric].log).toBe(`Alterado o produto ${product3.nome} com a quantidade ${product3.qttMin} para ${30}`);
+          expect(response.body[lastHistoric].log).toBe(`Alterado o produto ${products[2].name} com a quantidade ${products[2].currentStock} para ${30}`);
         });
     })
 
@@ -188,9 +226,9 @@ describe('AppController (e2e)', () => {
         .expect(200)
         .expect("Content-Type", /text\/csv/)
         .expect('Content-Disposition', `attachment; filename="historic-${ids[1]}.csv"`);
-      expect(response.body).toMatch("\"id\",\"log\",\"qttMin\",\"creatAt\",\"productId\"") //se tem o head
-      expect(response.body).toContain(`Recuperado o produto ${product3.nome} com a quantidade ${product3.qtt}`)
-      expect(response.body).toContain(`Alterado o produto ${product3.nome} com a quantidade ${product3.qttMin} para ${30}`)
+      expect(response.body).toMatch("\"id\",\"log\",\"currentStock\",\"creatAt\",\"productId\"") //se tem o head
+      expect(response.body).toContain(`Recuperado o produto ${products[2].name} com a quantidade ${products[2].minimumStock}`)
+      expect(response.body).toContain(`Alterado o produto ${products[2].name} com a quantidade ${products[2].currentStock} para ${30}`)
       
       //Caberia colocar mais testes sobre o hitórico aqui.
     })

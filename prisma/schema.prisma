@@ -18,17 +18,26 @@ datasource db {
 
 model Product {
   id Int @default(autoincrement()) @id
-  nome String
-  SKU String
-  qtt Int
-  qttMin Int 
+  name String
+  sku String
+  updateAT DateTime @default(now())
+  creatAt DateTime @default(now())
+
+  currentStock Int
+  minimumStock Int 
+
+  description String
+  category String
+
+  price Float
+
   historics Historic[]
 }
 
 model Historic {
   id Int @default(autoincrement()) @id
   log String
-  qttMin Int
+  currentStock Int
   creatAt DateTime @default(now())
   product Product @relation(fields: [productId], references: [id])
   productId Int
