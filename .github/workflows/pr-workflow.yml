@@ -10,18 +10,17 @@ jobs:
     env:
       DATABASE_URL: postgresql://stockflow:senhasecreta@dev-db:5432/stockflow_db?schema=public
 
-  steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: 20
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
 
-    - name: Install dependencies
-      run: npm install
+      - name: Install dependencies
+        run: npm install
 
-    - name: Execute test
-      run: docker compose up --build --abort-on-container-exit 
-
+      - name: Execute test
+        run: docker compose up --build --abort-on-container-exit
