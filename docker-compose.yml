@@ -29,20 +29,6 @@ services:
        - stockflow-network
     environment:
        - DATABASE_URL=postgresql://stockflow:senhasecreta@dev-db:5432/stockflow_db?schema=public
-  backend-prod:
-    build:
-      context: .
-      target: prod
-    ports:
-        - "3001:3000"
-    depends_on:
-      dev-db:
-        condition: service_healthy
-
-    networks:
-       - stockflow-network
-    environment:
-       - DATABASE_URL=postgresql://stockflow:senhasecreta@dev-db:5432/stockflow_db?schema=public
 
 
 networks:
