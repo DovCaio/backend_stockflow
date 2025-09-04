@@ -1,6 +1,7 @@
 services:
   dev-db:
     image: postgres:13
+    container_name: container-db
     ports:
       - "5432:5432"
     environment:
@@ -18,9 +19,10 @@ services:
     build:
       context: .
       target: test
+    container_name: container-backend
     ports:
         - "3001:3000"
-    command: /bin/sh -c "npx prisma migrate deploy && npm run test:e2e"
+    command: /bin/sh -c "npx prisma migrate deploy && npm run test:e2e && npm run start:dev"
     depends_on:
       dev-db:
         condition: service_healthy
