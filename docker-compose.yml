@@ -14,7 +14,7 @@ services:
       retries: 5
     networks:
       - stockflow-network
-  backend-db:
+  backend-dev:
     build:
       context: .
       target: test
@@ -29,6 +29,7 @@ services:
        - stockflow-network
     environment:
        - DATABASE_URL=postgresql://stockflow:senhasecreta@dev-db:5432/stockflow_db?schema=public
+
 
 networks:
   stockflow-network:

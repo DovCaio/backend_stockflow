@@ -56,3 +56,14 @@ pids
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
 /generated/prisma
+
+# Arquivos de estado (podem conter senhas e info sensível)
+*.tfstate
+*.tfstate.backup
+
+# Pasta criada pelo Terraform
+.terraform/
+
+# Arquivos de log
+*.log
+
