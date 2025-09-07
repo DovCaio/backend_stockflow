@@ -44,9 +44,9 @@ describe('user tests', () => {
 
 
   describe("Crud", () => {
-    it('/product (POST)', async () => {
+    it('/users (POST)', async () => {
           return await request(app.getHttpServer())
-            .post('/products')
+            .post('/users')
             .send(users[0])
             .expect(201)
             .then((response) => {
@@ -54,7 +54,7 @@ describe('user tests', () => {
               expect(response.body.name).toBe(users[0].name);
               expect(response.body.email).toBe(users[0].email);
               expect(response.body.role).toBe("USER");
-              expect(response.body.password).toBeNull()
+              expect(response.body.password).toBeUndefined()
             });
         });
     

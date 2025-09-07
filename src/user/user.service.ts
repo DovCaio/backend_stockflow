@@ -8,7 +8,7 @@ export class UserService {
     constructor(private readonly prisma: PrismaService){}
 
     async create(user:User) : Promise<any | null>{
-        const result  =  await this.prisma.user.create({
+        const result : any  =  await this.prisma.user.create({
             data: {
                 email: user.email,
                 name: user.name,
@@ -16,7 +16,7 @@ export class UserService {
                 role: user.role
             }
         })
-
+        delete result.password
         return result
 
 
