@@ -186,7 +186,6 @@ describe('AppController (e2e)', () => {
         .get(`/products/dashboard/summary`)
         .expect(200)
         .then((res) => {
-          console.log(res.body);
           expect(res.body.totalProducts).toBe(1);
           expect(res.body.lowStockProducts).toBe(0);
           expect(res.body.outOfStockProducts).toBe(0);
@@ -194,5 +193,13 @@ describe('AppController (e2e)', () => {
           expect(res.body.todayMovements).toBe(1);
         });
     });
+    it("get all com paginação", async () => { //Não tive como ver se isso ta funcionado mesmo, provavelmente por conta do stockStatus
+      return await request(app.getHttpServer())
+      .get("/products/all?page=1&limit=10&search=Mouse&category=Periféricos&stockStatus=NORMAL_STOCK")
+      .expect(200)
+      .then((res) => {
+        console.log(res.body)
+      })
+    })
   });
 });

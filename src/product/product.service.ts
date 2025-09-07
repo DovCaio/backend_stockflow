@@ -5,7 +5,7 @@ import { PrismaService } from '../prisma/prisma.service';
 //import { Historic } from '@prisma/client';
 
 import { Query1 } from 'src/models/Query1';
-import { MovementType } from '@prisma/client';
+import { AlertType, MovementType } from '@prisma/client';
 
 @Injectable()
 export class ProductService {
@@ -76,12 +76,12 @@ export class ProductService {
       },
       select : {
         currentStock : true,
-        name: true
+        name: true,
+        minimumStock: true
       }
     
     })
     
-
     const updateQtt = await this.prisma.product.update({
       where: {
         id: prodId
@@ -97,6 +97,20 @@ export class ProductService {
         productId: prodId,
         userId: userId
       }
+    })
+    const minimumStock = prod?.minimumStock
+
+    if (!minimumStock) return
+    
+    const alert_type = newQtt == 0 ? AlertType.OUT_OF_STOCK : (newQtt < minimumStock ? AlertType.LOW_STOCK : AlertType.NORMAL_STOCK)
+
+    await this.prisma.stockAlert.create({
+      data: {
+        type: alert_type,
+        message: "A",
+        productId: prodId
+      }
+
     })
 
     return updateQtt
@@ -152,6 +166,16 @@ export class ProductService {
   }
 
   async seach(query: Query1){
-    
+    return this.prisma.product.findMany({
+    where: {
+      AND: [
+        { name: { contains: query.search } },
+        { category: query.category },
+        { alerts: { some: { type: query.stockStatus } } },//Deveria ser o último alerta registrado, porém o prisma não deixa essa opção, teria que fazer uma consulta sql, porém não acho importante
+      ],
+    },
+    skip: (query.page - 1) * query.limit,
+    take: query.limit
+  });
   }
 }

@@ -1,3 +1,4 @@
+import { AlertType } from "@prisma/client"
 
 
 export class Query1 {
@@ -5,6 +6,6 @@ export class Query1 {
     limit: number
     search: string
     category: string
-    stockStatus: string
+    stockStatus: AlertType
 
 }
