@@ -64,6 +64,8 @@ export class ProductService {
         }
     })
 
+
+
     return {qtt: prod?.currentStock}
   }
 
@@ -77,6 +79,7 @@ export class ProductService {
         currentStock : true,
         name: true
       }
+    
     })
     
 
@@ -89,6 +92,7 @@ export class ProductService {
       }
     }) 
 
+    //Precisa registrar isso, porém vai precisar fazer o crud de users também
 
     return updateQtt
 

@@ -59,7 +59,7 @@ describe('AppController (e2e)', () => {
     },
   ];
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
@@ -68,19 +68,14 @@ describe('AppController (e2e)', () => {
 
     prisma = app.get(PrismaService);
 
-    await app.init();
-  });
-
-  afterAll(async () => {
-    //await prisma.historic.deleteMany();
     await prisma.product.deleteMany();
     await prisma.stockAlert.deleteMany();
     await prisma.stockMovement.deleteMany();
     await prisma.user.deleteMany();
 
-    await prisma.$disconnect();
-    await app.close();
+    await app.init();
   });
+
   const ids: string[] = [];
 
   describe('CRUD', () => {
