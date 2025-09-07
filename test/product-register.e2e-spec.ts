@@ -17,7 +17,8 @@ describe('AppController (e2e)', () => {
     currentStock: 20,
     description: "Notebook Dell Inspiron com Intel i5, 8GB RAM e 256GB SSD.",
     category: "Eletrônicos",
-    price: 3599.90
+    price: 3599.90,
+    
   },
   {
     name: "Mouse Gamer Logitech G502",
@@ -71,13 +72,16 @@ describe('AppController (e2e)', () => {
   });
 
   afterAll(async () => {
-    await prisma.historic.deleteMany();
+    //await prisma.historic.deleteMany();
     await prisma.product.deleteMany();
+    await prisma.stockAlert.deleteMany()
+    await prisma.stockMovement.deleteMany()
+    await prisma.user.deleteMany()
 
     await prisma.$disconnect();
     await app.close();
   });
-    const ids : number[] = []
+    const ids : string[] = []
 
   describe('CRUD', () => {
     it('/product (POST)', async () => {
@@ -91,7 +95,7 @@ describe('AppController (e2e)', () => {
           expect(response.body.sku).toBe(products[0].sku);
           expect(response.body.minimumStock).toBe(products[0].minimumStock);
           expect(response.body.currentStock).toBe(products[0].currentStock);
-          ids.push(response.body.id as number);
+          ids.push(response.body.id);
         });
     });
 
@@ -154,46 +158,7 @@ describe('AppController (e2e)', () => {
         });
     });
 
-    it('/product/qtt (GET) pegar a quantidade de um produto apartir do id', async () => {
-      return await request(app.getHttpServer())
-        .get(`/products/qtt/${ids[1]}`)
-        .expect(200)
-        .then((response) => {
-          expect(response.body.qtt).toBe(products[2].currentStock);
-        });
-    });
-
-    it('/product/historic (GET) pega o último valor do historico', async () =>{
-      return await request(app.getHttpServer())
-        .get(`/products/historic/${ids[1]}`)
-        .expect(200)
-        .then((response) => {
-          const lastHistoric = response.body.length - 1
-          expect(response.body.length).toBe(1)
-          expect(response.body[lastHistoric].log).toBe(`Recuperado o produto ${products[2].name} com a quantidade ${products[2].minimumStock}`);
-        });
-    })
-    it('/product/qtt (PUT) mudar a quantidade de um produto apartir do id', async () => {
-      return await request(app.getHttpServer())
-        .put(`/products/qtt/${ids[1]}/30`)
-        .expect(200)
-        .then((response) => {
-        
-          expect(response.body.currentStock).toBe(30);
-        });
-    });
-
-
-    it('/product/historic (GET) pega o último valor do historico de um produto, tem que ter sido alterado', async () =>{
-      return await request(app.getHttpServer())
-        .get(`/products/historic/${ids[1]}`)
-        .expect(200)
-        .then((response) => {
-          const lastHistoric = response.body.length - 1
-          expect(response.body.length).toBe(2)
-          expect(response.body[lastHistoric].log).toBe(`Alterado o produto ${products[2].name} com a quantidade ${products[2].currentStock} para ${30}`);
-        });
-    })
+    
 
     it("Resumo", async () => {
       return await request(app.getHttpServer())
@@ -211,41 +176,5 @@ describe('AppController (e2e)', () => {
 
   });
 
-  describe("Exportacao de histórico", () => {
 
-    it("/product/{id}/historic/export/json (GET) deve baixar o histórico do produto em json", async () => {
-      const response = await request(app.getHttpServer())
-        .get(`/products/${ids[1]}/historic/export/json`)
-        .expect(200)
-        .expect("Content-Type", /json/)
-        .expect('Content-Disposition', `attachment; filename="historic-${ids[1]}.json"`);
-
-      expect(response.text).toContain(`"productId": ${ids[1]}`)
-      //Caberia colocar mais testes sobre o hitórico aqui.
-    })
-
-    it("/product/{id}/historic/export/csv (GET) deve baixar o histórico do produto em csv", async () => {
-      const response = await request(app.getHttpServer())
-        .get(`/products/${ids[1]}/historic/export/csv`)
-        .buffer(true)
-        .parse((res, callback) => {
-        let data = '';
-        res.on('data', chunk => {
-          data += chunk;
-        });
-        res.on('end', () => {
-          callback(null, data);
-        });
-      })
-        .expect(200)
-        .expect("Content-Type", /text\/csv/)
-        .expect('Content-Disposition', `attachment; filename="historic-${ids[1]}.csv"`);
-      expect(response.body).toMatch("\"id\",\"log\",\"currentStock\",\"creatAt\",\"productId\"") //se tem o head
-      expect(response.body).toContain(`Recuperado o produto ${products[2].name} com a quantidade ${products[2].minimumStock}`)
-      expect(response.body).toContain(`Alterado o produto ${products[2].name} com a quantidade ${products[2].currentStock} para ${30}`)
-      
-      //Caberia colocar mais testes sobre o hitórico aqui.
-    })
-
-  })
 });

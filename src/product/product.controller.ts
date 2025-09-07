@@ -8,6 +8,7 @@ import {
   ParseIntPipe,
   Post,
   Put,
+  Query,
   Res,
   UsePipes,
   ValidationPipe,
@@ -15,6 +16,7 @@ import {
 import { ProductService } from './product.service';
 import { Product } from '../models/Product';
 import { Response } from 'express';
+import { Query1 } from '../models/Query1';
 
 @Controller('products')
 @UsePipes(new ValidationPipe({ whitelist: true }))
@@ -29,20 +31,20 @@ export class ProductController {
 
   @Put(':id')
   updateAproduct(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @Body() product: Product,
   ) {
     return this.productService.update(id, product);
   }
 
   @Get(':id')
-  getAProduct(@Param('id', ParseIntPipe) id: number) {
+  getAProduct(@Param('id') id: string) {
     return this.productService.get(id);
   }
 
   @Delete(':id')
   @HttpCode(204)
-  deleteAProduct(@Param('id', ParseIntPipe) id: number) {
+  deleteAProduct(@Param('id') id: string) {
     return this.productService.delete(id);
   }
 
@@ -54,45 +56,15 @@ export class ProductController {
     return this.productService.dashBoardSummary()
   }
 
+  @Get("/all")
+  getAllWithSearch(@Query("page") query: Query1, ){
+    return this.productService.seach(query)
+  }
+
 
   @Get()
   getAllProducts(){
     return this.productService.getAll()
   } 
-
-
-  @Get("/qtt/:id")
-  getQtt(@Param("id",ParseIntPipe) id:number){
-    return this.productService.getQttById(id)
-  }
-
-
-  @Put("/qtt/:id/:newqtt")
-  putQtt(@Param("id",ParseIntPipe) id:number, @Param("newqtt",ParseIntPipe) newQtt: number){
-    return this.productService.putQttById(id, newQtt)
-  }
-
-  //Histórico
-
-  @Get("/historic/:prodId")
-  getProductHistorics(@Param("prodId", ParseIntPipe) id:number){
-
-    return this.productService.getProductHistorics(id);
-
-  }
-
-  //Exportação de hitórico
-  
-  @Get("/:prodId/historic/export/json")
-  async getHistoricJson(@Param("prodId", ParseIntPipe) id:number, @Res() res: Response){
-    return this.productService.exportHistoricJson(id, res)
-  }
-
-  @Get("/:prodId/historic/export/csv")
-  async getHistoricCsv(@Param("prodId", ParseIntPipe) id:number, @Res() res: Response){
-    return this.productService.exportHistoricCsv(id, res)
-    
-  }
-
 
 }

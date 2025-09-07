@@ -1,4 +1,4 @@
-import { IsInt, IsNumber, IsString } from 'class-validator';
+import { IsDate, IsInt, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class Product {
   @IsString()
@@ -11,11 +11,20 @@ export class Product {
   currentStock: number;
 
   @IsString()
-  description: string;
+  @IsOptional()
+  description?: string | null;
 
   @IsString()
-  category: string;
+  @IsOptional()
+  category?: string | null;
 
   @IsNumber()
   price: number
+
+  @IsDate()
+  @IsOptional()
+  createAt?: Date
+  @IsDate()
+  @IsOptional()
+  updateAt?: Date
 }
