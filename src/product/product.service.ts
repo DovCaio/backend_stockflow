@@ -5,6 +5,7 @@ import { PrismaService } from '../prisma/prisma.service';
 //import { Historic } from '@prisma/client';
 
 import { Query1 } from 'src/models/Query1';
+import { MovementType } from '@prisma/client';
 
 @Injectable()
 export class ProductService {
@@ -64,12 +65,10 @@ export class ProductService {
         }
     })
 
-
-
     return {qtt: prod?.currentStock}
   }
 
-  async putQttById(prodId: string, newQtt: number){
+  async putQttById(prodId: string, userId: string,newQtt: number){
 
     const prod = await this.prisma.product.findUnique({
       where : {
@@ -91,8 +90,14 @@ export class ProductService {
         currentStock:newQtt                
       }
     }) 
-
-    //Precisa registrar isso, porém vai precisar fazer o crud de users também
+    await this.prisma.stockMovement.create({
+      data: {
+        quantity: newQtt,
+        type: MovementType.IN,
+        productId: prodId,
+        userId: userId
+      }
+    })
 
     return updateQtt
 
@@ -115,7 +120,7 @@ export class ProductService {
       return row.currentStock == 0
     }).length
 
-    const totalMovements = 2
+    const totalMovements = await this.prisma.stockMovement.count()
     const today = new Date()
     const startOfDay = new Date(today);
     startOfDay.setHours(0, 0, 0, 0);
@@ -124,7 +129,19 @@ export class ProductService {
     endOfDay.setHours(23, 59, 59, 999);
 
 
-    const todayMovements = 2
+    const todayMovements = await this.prisma.stockMovement.count({
+      where: {
+        createdAt: {
+          gt: startOfDay
+        },
+        AND: {
+          createdAt: {
+            lt: endOfDay
+          }
+        }
+      }
+    })
+
     return {
       totalProducts,
       lowStockProducts,

@@ -59,6 +59,12 @@ describe('AppController (e2e)', () => {
     },
   ];
 
+  const user1 = {
+            name: "Usuário1",
+        email: "email@do.user1",
+        password: "123567890"
+  }
+
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
@@ -77,6 +83,7 @@ describe('AppController (e2e)', () => {
   });
 
   const ids: string[] = [];
+  const userIds: string[] = []
 
   describe('CRUD', () => {
     it('/product (POST)', async () => {
@@ -139,7 +146,12 @@ describe('AppController (e2e)', () => {
         data: products[2],
       });
 
+      const user = await prisma.user.create({
+        data: user1
+      })
+
       ids.push(prod.id);
+      userIds.push(user.id)
     });
 
     it('/product (GET) ALL', async () => {
@@ -162,7 +174,7 @@ describe('AppController (e2e)', () => {
 
     it('/product/qtt (PUT) mudar a quantidade de um produto apartir do id', async () => {
       return await request(app.getHttpServer())
-        .put(`/products/qtt/${ids[1]}/30`)
+        .put(`/products/qtt/${ids[1]}/${userIds[0]}/30`)
         .expect(200)
         .then((response) => {
           expect(response.body.currentStock).toBe(30);
@@ -178,8 +190,8 @@ describe('AppController (e2e)', () => {
           expect(res.body.totalProducts).toBe(1);
           expect(res.body.lowStockProducts).toBe(0);
           expect(res.body.outOfStockProducts).toBe(0);
-          expect(res.body.totalMovements).toBe(2);
-          expect(res.body.todayMovements).toBe(2);
+          expect(res.body.totalMovements).toBe(1);
+          expect(res.body.todayMovements).toBe(1);
         });
     });
   });

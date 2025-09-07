@@ -62,12 +62,13 @@ export class ProductController {
     return this.productService.getQttById(id);
   }
 
-  @Put('/qtt/:id/:newqtt')
+  @Put('/qtt/:id/:userID/:newqtt')
   putQtt(
     @Param('id') id: string,
+    @Param('userID') userID: string,
     @Param('newqtt', ParseIntPipe) newQtt: number,
   ) {
-    return this.productService.putQttById(id, newQtt);
+    return this.productService.putQttById(id,userID, newQtt);
   }
 
   @Get()
