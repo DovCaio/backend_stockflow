@@ -30,10 +30,7 @@ export class ProductController {
   }
 
   @Put(':id')
-  updateAproduct(
-    @Param('id') id: string,
-    @Body() product: Product,
-  ) {
+  updateAproduct(@Param('id') id: string, @Body() product: Product) {
     return this.productService.update(id, product);
   }
 
@@ -50,21 +47,31 @@ export class ProductController {
 
   //Controle de entrada e saída
 
-
-  @Get("/dashboard/summary")
-  getDashboardSummry(){
-    return this.productService.dashBoardSummary()
+  @Get('/dashboard/summary')
+  getDashboardSummry() {
+    return this.productService.dashBoardSummary();
   }
 
-  @Get("/all")
-  getAllWithSearch(@Query("page") query: Query1, ){
-    return this.productService.seach(query)
+  @Get('/all')
+  getAllWithSearch(@Query('page') query: Query1) {
+    return this.productService.seach(query);
   }
 
+  @Get('/qtt/:id')
+  getQtt(@Param('id') id: string) {
+    return this.productService.getQttById(id);
+  }
+
+  @Put('/qtt/:id/:newqtt')
+  putQtt(
+    @Param('id') id: string,
+    @Param('newqtt', ParseIntPipe) newQtt: number,
+  ) {
+    return this.productService.putQttById(id, newQtt);
+  }
 
   @Get()
-  getAllProducts(){
-    return this.productService.getAll()
-  } 
-
+  getAllProducts() {
+    return this.productService.getAll();
+  }
 }

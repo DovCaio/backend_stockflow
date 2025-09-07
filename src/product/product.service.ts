@@ -56,6 +56,43 @@ export class ProductService {
     return this.prisma.product.findMany();
   }
 
+ async getQttById(id: string) : Promise<{qtt: number | null | undefined}> {
+
+    const prod = await this.prisma.product.findUnique({
+        where: {
+            id
+        }
+    })
+
+    return {qtt: prod?.currentStock}
+  }
+
+  async putQttById(prodId: string, newQtt: number){
+
+    const prod = await this.prisma.product.findUnique({
+      where : {
+        id: prodId
+      },
+      select : {
+        currentStock : true,
+        name: true
+      }
+    })
+    
+
+    const updateQtt = await this.prisma.product.update({
+      where: {
+        id: prodId
+      },
+      data: {
+        currentStock:newQtt                
+      }
+    }) 
+
+
+    return updateQtt
+
+  }
 
 
 
