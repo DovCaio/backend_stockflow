@@ -9,3 +9,13 @@ export class Query1 {
     stockStatus: AlertType
 
 }
+
+export class Query2 {
+    limit: number
+    sort: string
+    period: string
+}
+
+export class Query3 {
+    type: AlertType
+}

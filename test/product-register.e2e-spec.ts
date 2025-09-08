@@ -201,5 +201,25 @@ describe('AppController (e2e)', () => {
         console.log(res.body)
       })
     })
+
+    it("get one by some sort", async () => {
+      return await request(app.getHttpServer())
+      .get("/products?limit=6&sort=bestSellers&period=month")
+      .expect(200)
+      .then((res) => {
+        console.log(res.body)
+        expect(res.body[0].description).toContain("Cadeira ergonômica com ajustes completos e apoio para braços 3D.")
+      })
+    })
+
+    it("Get some type of alert", async () => {
+      return await request(app.getHttpServer())
+      .get("/products/alerts?type=LOW_STOCK")
+      .expect(200)
+      .then((res) => {
+        console.log(res.body)
+      })
+    })
+
   });
 });

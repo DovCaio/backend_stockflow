@@ -16,7 +16,7 @@ import {
 import { ProductService } from './product.service';
 import { Product } from '../models/Product';
 import { Response } from 'express';
-import { Query1 } from '../models/Query1';
+import { Query1, Query2, Query3 } from '../models/Query1';
 
 @Controller('products')
 @UsePipes(new ValidationPipe({ whitelist: true }))
@@ -54,6 +54,8 @@ export class ProductController {
 
   @Get('/all')
   getAllWithSearch(@Query('page') query: Query1) {
+    console.log(query)
+    console.log("query")
     return this.productService.seach(query);
   }
 
@@ -74,5 +76,18 @@ export class ProductController {
   @Get()
   getAllProducts() {
     return this.productService.getAll();
+  }
+
+  @Get()
+  getBySomeCrazyLimit(@Query() query : Query2){ //Ele da o exemplo do best seller, porém para fazer outros tipos de filtro, ou tinha que ser dado eles, ou teria que usar um pln pesado
+
+    return this.productService.search2(query)
+
+  }
+
+  @Get()
+  getByAlert(@Query() query: Query3) {
+    return this.productService.search3(query)
+    
   }
 }
