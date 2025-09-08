@@ -170,4 +170,46 @@ export class ProductService {
 
   }
 
+  async dashBoardSummary() {
+
+
+    const totalProducts = await this.prisma.product.count()
+
+    const allProds = await this.prisma.product.findMany()
+
+    const lowStockProducts = allProds.filter((row) => {
+      return row.currentStock < row.minimumStock 
+    }).length
+
+    const outOfStockProducts = allProds.filter((row) => {
+      return row.currentStock == 0
+    }).length
+
+    const totalMovements = await this.prisma.historic.count()
+    const today = new Date()
+    const startOfDay = new Date(today);
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const endOfDay = new Date(today);
+    endOfDay.setHours(23, 59, 59, 999);
+
+
+    const todayMovements = await this.prisma.historic.count(
+      {
+        where: {
+          creatAt: {
+            gte: startOfDay,
+            lte: endOfDay
+          }
+        }  
+      }
+    )
+    return {
+      totalProducts,
+      lowStockProducts,
+      outOfStockProducts,
+      totalMovements,
+      todayMovements
+    }
+  }
 }

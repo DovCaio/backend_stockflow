@@ -16,7 +16,7 @@ import { ProductService } from './product.service';
 import { Product } from '../models/Product';
 import { Response } from 'express';
 
-@Controller('product')
+@Controller('products')
 @UsePipes(new ValidationPipe({ whitelist: true }))
 export class ProductController {
   constructor(private readonly productService: ProductService) {}
@@ -47,6 +47,13 @@ export class ProductController {
   }
 
   //Controle de entrada e saída
+
+
+  @Get("/dashboard/summary")
+  getDashboardSummry(){
+    return this.productService.dashBoardSummary()
+  }
+
 
   @Get()
   getAllProducts(){

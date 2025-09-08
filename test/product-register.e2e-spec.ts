@@ -82,7 +82,7 @@ describe('AppController (e2e)', () => {
   describe('CRUD', () => {
     it('/product (POST)', async () => {
       return await request(app.getHttpServer())
-        .post('/product')
+        .post('/products')
         .send(products[0])
         .expect(201)
         .then((response) => {
@@ -97,7 +97,7 @@ describe('AppController (e2e)', () => {
 
     it('/product (PUT)', async () => {
       return await request(app.getHttpServer())
-        .put(`/product/${ids[0]}`)
+        .put(`/products/${ids[0]}`)
         .send(products[1])
 
         .expect(200)
@@ -113,7 +113,7 @@ describe('AppController (e2e)', () => {
 
     it('/product (GET)', async () => {
       return await request(app.getHttpServer())
-        .get(`/product/${ids[0]}`)
+        .get(`/products/${ids[0]}`)
 
         .expect(200)
         .then((response) => {
@@ -128,7 +128,7 @@ describe('AppController (e2e)', () => {
 
     it('/product (DELETE)', async () => {
       return await request(app.getHttpServer())
-        .delete(`/product/${ids[0]}`)
+        .delete(`/products/${ids[0]}`)
 
         .expect(204);
     });
@@ -147,7 +147,7 @@ describe('AppController (e2e)', () => {
 
     it('/product (GET) ALL', async () => {
       return await request(app.getHttpServer())
-        .get(`/product`)
+        .get(`/products`)
         .expect(200)
         .then((response) => {
           expect(response.body.length).toBe(1);
@@ -156,7 +156,7 @@ describe('AppController (e2e)', () => {
 
     it('/product/qtt (GET) pegar a quantidade de um produto apartir do id', async () => {
       return await request(app.getHttpServer())
-        .get(`/product/qtt/${ids[1]}`)
+        .get(`/products/qtt/${ids[1]}`)
         .expect(200)
         .then((response) => {
           expect(response.body.qtt).toBe(products[2].currentStock);
@@ -165,7 +165,7 @@ describe('AppController (e2e)', () => {
 
     it('/product/historic (GET) pega o último valor do historico', async () =>{
       return await request(app.getHttpServer())
-        .get(`/product/historic/${ids[1]}`)
+        .get(`/products/historic/${ids[1]}`)
         .expect(200)
         .then((response) => {
           const lastHistoric = response.body.length - 1
@@ -175,7 +175,7 @@ describe('AppController (e2e)', () => {
     })
     it('/product/qtt (PUT) mudar a quantidade de um produto apartir do id', async () => {
       return await request(app.getHttpServer())
-        .put(`/product/qtt/${ids[1]}/30`)
+        .put(`/products/qtt/${ids[1]}/30`)
         .expect(200)
         .then((response) => {
         
@@ -186,7 +186,7 @@ describe('AppController (e2e)', () => {
 
     it('/product/historic (GET) pega o último valor do historico de um produto, tem que ter sido alterado', async () =>{
       return await request(app.getHttpServer())
-        .get(`/product/historic/${ids[1]}`)
+        .get(`/products/historic/${ids[1]}`)
         .expect(200)
         .then((response) => {
           const lastHistoric = response.body.length - 1
@@ -195,13 +195,27 @@ describe('AppController (e2e)', () => {
         });
     })
 
+    it("Resumo", async () => {
+      return await request(app.getHttpServer())
+        .get(`/products/dashboard/summary`)
+        .expect(200)
+        .then(res => {
+          console.log(res.body)
+          expect(res.body.totalProducts).toBe(1)
+          expect(res.body.lowStockProducts).toBe(0)
+          expect(res.body.outOfStockProducts).toBe(0)
+          expect(res.body.totalMovements).toBe(2)
+          expect(res.body.todayMovements).toBe(2)
+        })
+    })
+
   });
 
   describe("Exportacao de histórico", () => {
 
     it("/product/{id}/historic/export/json (GET) deve baixar o histórico do produto em json", async () => {
       const response = await request(app.getHttpServer())
-        .get(`/product/${ids[1]}/historic/export/json`)
+        .get(`/products/${ids[1]}/historic/export/json`)
         .expect(200)
         .expect("Content-Type", /json/)
         .expect('Content-Disposition', `attachment; filename="historic-${ids[1]}.json"`);
@@ -212,7 +226,7 @@ describe('AppController (e2e)', () => {
 
     it("/product/{id}/historic/export/csv (GET) deve baixar o histórico do produto em csv", async () => {
       const response = await request(app.getHttpServer())
-        .get(`/product/${ids[1]}/historic/export/csv`)
+        .get(`/products/${ids[1]}/historic/export/csv`)
         .buffer(true)
         .parse((res, callback) => {
         let data = '';
