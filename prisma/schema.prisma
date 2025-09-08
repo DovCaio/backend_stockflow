@@ -38,7 +38,6 @@ model Product {
 //   creatAt DateTime @default(now())
 //   product Product @relation(fields: [productId], references: [id])
 //   productId Int
-
 // }
 model User {
   id        String   @id @default(cuid())
@@ -103,4 +102,5 @@ enum MovementType {
 enum AlertType {
   LOW_STOCK
   OUT_OF_STOCK
+  NORMAL_STOCK
 }

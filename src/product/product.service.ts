@@ -1,10 +1,12 @@
-import { Injectable } from '@nestjs/common';
-import { Product } from 'src/models/Product';
+import { Body, Injectable } from '@nestjs/common';
+import { Product } from '../models/Product';
 import { PrismaService } from '../prisma/prisma.service';
-import { logsPatherns } from '../utils/logs-pathern';
-import { Historic } from '@prisma/client';
-import { Response } from 'express';
-import { Parser } from 'json2csv';
+
+//import { Historic } from '@prisma/client';
+
+import { Query1, Query2, Query3 } from '../models/Query1';
+import { AlertType, MovementType } from '@prisma/client';
+import { Moviment } from '../models/Moviment';
 
 @Injectable()
 export class ProductService {
@@ -12,12 +14,20 @@ export class ProductService {
 
   async save(product: Product): Promise<Product | null> {
     return this.prisma.product.create({
-      data: product,  
+      data: product,
     });
   }
 
-  async update(id: number, product: Product): Promise<Product | null> {
-    const { name, sku, minimumStock, currentStock, category, description, price} = product;
+  async update(id: string, product: Product): Promise<Product | null> {
+    const {
+      name,
+      sku,
+      minimumStock,
+      currentStock,
+      category,
+      description,
+      price,
+    } = product;
 
     return this.prisma.product.update({
       where: {
@@ -30,12 +40,12 @@ export class ProductService {
         currentStock,
         category,
         description,
-        price
+        price,
       },
     });
   }
 
-  async get(id: number): Promise<Product | null> {
+  async get(id: string): Promise<Product | null> {
     return this.prisma.product.findUnique({
       where: {
         id,
@@ -43,17 +53,10 @@ export class ProductService {
     });
   }
 
-  async delete(id: number): Promise<Product | null> {
-
-    await this.prisma.historic.deleteMany({
+  async delete(id: string) {
+    return this.prisma.product.delete({
       where: {
-        productId: id
-      }
-    })
-
-    return await this.prisma.product.delete({
-      where: {
-        id,
+        id: id,
       },
     });
   }
@@ -62,154 +65,161 @@ export class ProductService {
     return this.prisma.product.findMany();
   }
 
-
-  async getQttById(id: number) : Promise<{qtt: number | null | undefined}> {
-
+  async getQttById(id: string): Promise<{ qtt: number | null | undefined }> {
     const prod = await this.prisma.product.findUnique({
-        where: {
-            id
-        }
-    })
+      where: {
+        id,
+      },
+    });
 
-    this.createNewHistoric(id, logsPatherns("get", {nome: prod?.name, currentStock:prod?.minimumStock}))
-
-    return {qtt: prod?.currentStock}
+    return { qtt: prod?.currentStock };
   }
 
-  async putQttById(prodId: number, newQtt: number){
-
+  async putQttById(prodId: string, userId: string, newQtt: number) {
     const prod = await this.prisma.product.findUnique({
-      where : {
-        id: prodId
+      where: {
+        id: prodId,
       },
-      select : {
-        currentStock : true,
-        name: true
-      }
-    })
-    
+      select: {
+        currentStock: true,
+        name: true,
+        minimumStock: true,
+      },
+    });
 
     const updateQtt = await this.prisma.product.update({
       where: {
-        id: prodId
+        id: prodId,
       },
       data: {
-        currentStock:newQtt                
-      }
-    }) 
-
-    this.createNewHistoric(prodId, logsPatherns("update", {nome: prod?.name, currentStock: prod?.currentStock, newQtt}))
-
-    return updateQtt
-
-  }
-
-  //Histórico
-
-  private async createNewHistoric(prodId:number, log : string) : Promise<any | null>{
-
-
-    const prod = await this.prisma.product.findUnique({
-    where: { id: prodId },
-    select: { currentStock: true } // mais leve
-  });
-
-  if (!prod) return null;
-
-  const historic = await this.prisma.historic.create({
-    data: {
-      log,
-      productId: prodId,
-      currentStock: prod.currentStock,
-      
-    }
-  });
-
-  return historic;
-  } 
-
-  async getProductHistorics(prodId: number) : Promise<Historic[] | null>{
-
-    return this.prisma.historic.findMany({
-      where: {
-        productId : prodId
-      }
-    })
-
-  }
-
-  //Exportação de histórico
-
-  async exportHistoricJson(prodId:number, res: Response) {
-
-    const historic = await this.getProductHistorics(prodId)
-    const jsonBuffer = Buffer.from(JSON.stringify(historic, null,2), 'utf-8')
-
-    res.set({
-      'Content-Type': 'application/json',
-      'Content-Disposition': `attachment; filename="historic-${prodId}.json"`,
-      'Content-Length': jsonBuffer.length,
+        currentStock: newQtt,
+      },
     });
-    return res.send(jsonBuffer)
-
-  }
-
-  async exportHistoricCsv(prodId:number, res: Response) {
-
-    const historic = await this.getProductHistorics(prodId)
-    const parse = new Parser({header: true})
-    const csv = parse.parse(historic)
-
-    const buffer = Buffer.from(csv, "utf-8")
-    res.set({
-      'Content-Type': 'text/csv',
-      'Content-Disposition': `attachment; filename="historic-${prodId}.csv"`,
-      'Content-Length': buffer.length,
+    await this.prisma.stockMovement.create({
+      data: {
+        quantity: newQtt,
+        type: MovementType.IN,
+        productId: prodId,
+        userId: userId,
+      },
     });
-    return res.send(buffer)
+    const minimumStock = prod?.minimumStock;
 
+    if (!minimumStock) return;
+
+    const alert_type =
+      newQtt == 0
+        ? AlertType.OUT_OF_STOCK
+        : newQtt < minimumStock
+          ? AlertType.LOW_STOCK
+          : AlertType.NORMAL_STOCK;
+
+    await this.prisma.stockAlert.create({
+      data: {
+        type: alert_type,
+        message: 'A',
+        productId: prodId,
+      },
+    });
+
+    return updateQtt;
   }
 
   async dashBoardSummary() {
+    const totalProducts = await this.prisma.product.count();
 
-
-    const totalProducts = await this.prisma.product.count()
-
-    const allProds = await this.prisma.product.findMany()
+    const allProds = await this.prisma.product.findMany();
 
     const lowStockProducts = allProds.filter((row) => {
-      return row.currentStock < row.minimumStock 
-    }).length
+      return row.currentStock < row.minimumStock;
+    }).length;
 
     const outOfStockProducts = allProds.filter((row) => {
-      return row.currentStock == 0
-    }).length
+      return row.currentStock == 0;
+    }).length;
 
-    const totalMovements = await this.prisma.historic.count()
-    const today = new Date()
+    const totalMovements = await this.prisma.stockMovement.count();
+    const today = new Date();
     const startOfDay = new Date(today);
     startOfDay.setHours(0, 0, 0, 0);
 
     const endOfDay = new Date(today);
     endOfDay.setHours(23, 59, 59, 999);
 
+    const todayMovements = await this.prisma.stockMovement.count({
+      where: {
+        createdAt: {
+          gt: startOfDay,
+        },
+        AND: {
+          createdAt: {
+            lt: endOfDay,
+          },
+        },
+      },
+    });
 
-    const todayMovements = await this.prisma.historic.count(
-      {
-        where: {
-          creatAt: {
-            gte: startOfDay,
-            lte: endOfDay
-          }
-        }  
-      }
-    )
     return {
       totalProducts,
       lowStockProducts,
       outOfStockProducts,
       totalMovements,
-      todayMovements
-    }
+      todayMovements,
+    };
+  }
+
+  async seach(query: Query1) {
+    return this.prisma.product.findMany({
+      where: {
+        AND: [
+          { name: { contains: query.search } },
+          { category: query.category },
+          { alerts: { some: { type: query.stockStatus } } }, //Deveria ser o último alerta registrado, porém o prisma não deixa essa opção, teria que fazer uma consulta sql, porém não acho importante
+        ],
+      },
+      skip: (query.page - 1) * query.limit,
+      take: query.limit,
+    });
+  }
+
+  async search2(query: Query2) {
+    return this.prisma.product.findMany({
+      orderBy: {
+        movements: {
+          _count: 'desc',
+        },
+      },
+      take: query.limit, 
+      include: {
+        _count: {
+          select: { movements: true },
+        },
+      },
+    });
+  }
+
+  async search3(query: Query3) {
+    return this.prisma.product.findMany({
+      where: {
+          alerts : {
+            some: { //Mais uma vez a limitação do prisma  
+              type: query.type
+            }
+          }
+      }
+    })
+  }
+
+  async moviment(moviment: Moviment, prodId:string) {
+    return this.prisma.stockMovement.create({
+      data: {
+        quantity: moviment.quantity,
+        productId: prodId,
+        userId: moviment.userId,
+        type: moviment.type,
+        note: moviment.note
+
+      }
+    })
   }
 }

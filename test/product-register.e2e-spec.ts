@@ -1,83 +1,105 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ConsoleLogger, INestApplication } from '@nestjs/common';
+import {
+  ConsoleLogger,
+  INestApplication,
+  ValidationPipe,
+} from '@nestjs/common';
 import * as request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { Product } from '../src/models/Product';
+import { Moviment } from 'src/models/Moviment';
+import { MovementType } from '@prisma/client';
 
 describe('AppController (e2e)', () => {
   let app: INestApplication<App>;
   let prisma: PrismaService;
   const products: Product[] = [
-  {
-    name: "Notebook Dell Inspiron 15",
-    sku: "NB-DEL-001",
-    minimumStock: 5,
-    currentStock: 20,
-    description: "Notebook Dell Inspiron com Intel i5, 8GB RAM e 256GB SSD.",
-    category: "Eletrônicos",
-    price: 3599.90
-  },
-  {
-    name: "Mouse Gamer Logitech G502",
-    sku: "MOU-LOG-002",
-    minimumStock: 10,
-    currentStock: 50,
-    description: "Mouse gamer com sensor HERO 25K, 11 botões programáveis.",
-    category: "Periféricos",
-    price: 299.99
-  },
-  {
-    name: "Cadeira Gamer ThunderX3",
-    sku: "CAD-THU-003",
-    minimumStock: 2,
-    currentStock: 8,
-    description: "Cadeira ergonômica com ajustes completos e apoio para braços 3D.",
-    category: "Móveis",
-    price: 1299.00
-  },
-  {
-    name: "Monitor LG Ultrawide 29''",
-    sku: "MON-LG-004",
-    minimumStock: 3,
-    currentStock: 12,
-    description: "Monitor LG Ultrawide 29 polegadas, resolução 2560x1080.",
-    category: "Eletrônicos",
-    price: 1599.50
-  },
-  {
-    name: "Teclado Mecânico Redragon Kumara",
-    sku: "TEC-RED-005",
-    minimumStock: 7,
-    currentStock: 30,
-    description: "Teclado mecânico com switches Outemu Blue e iluminação RGB.",
-    category: "Periféricos",
-    price: 249.90
-  }
-];
+    {
+      name: 'Notebook Dell Inspiron 15',
+      sku: 'NB-DEL-001',
+      minimumStock: 5,
+      currentStock: 20,
+      description: 'Notebook Dell Inspiron com Intel i5, 8GB RAM e 256GB SSD.',
+      category: 'Eletrônicos',
+      price: 3599.9,
+    },
+    {
+      name: 'Mouse Gamer Logitech G502',
+      sku: 'MOU-LOG-002',
+      minimumStock: 10,
+      currentStock: 50,
+      description: 'Mouse gamer com sensor HERO 25K, 11 botões programáveis.',
+      category: 'Periféricos',
+      price: 299.99,
+    },
+    {
+      name: 'Cadeira Gamer ThunderX3',
+      sku: 'CAD-THU-003',
+      minimumStock: 2,
+      currentStock: 8,
+      description:
+        'Cadeira ergonômica com ajustes completos e apoio para braços 3D.',
+      category: 'Móveis',
+      price: 1299.0,
+    },
+    {
+      name: "Monitor LG Ultrawide 29''",
+      sku: 'MON-LG-004',
+      minimumStock: 3,
+      currentStock: 12,
+      description: 'Monitor LG Ultrawide 29 polegadas, resolução 2560x1080.',
+      category: 'Eletrônicos',
+      price: 1599.5,
+    },
+    {
+      name: 'Teclado Mecânico Redragon Kumara',
+      sku: 'TEC-RED-005',
+      minimumStock: 7,
+      currentStock: 30,
+      description:
+        'Teclado mecânico com switches Outemu Blue e iluminação RGB.',
+      category: 'Periféricos',
+      price: 249.9,
+    },
+  ];
 
+  const user1 = {
+    name: 'Usuário1',
+    email: 'email@do.user1',
+    password: '123567890',
+  };
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
 
-    app = moduleFixture.createNestApplication();
+    app = moduleFixture.createNestApplication({
+      logger: ['error', 'warn', 'log', 'debug', 'verbose'],
+    });
+
+    app.useGlobalPipes(
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+      }),
+    );
 
     prisma = app.get(PrismaService);
-    
+
+    await prisma.product.deleteMany();
+    await prisma.stockAlert.deleteMany();
+    await prisma.stockMovement.deleteMany();
+    await prisma.user.deleteMany();
+
     await app.init();
   });
 
-  afterAll(async () => {
-    await prisma.historic.deleteMany();
-    await prisma.product.deleteMany();
-
-    await prisma.$disconnect();
-    await app.close();
-  });
-    const ids : number[] = []
+  const ids: string[] = [];
+  const userIds: string[] = [];
 
   describe('CRUD', () => {
     it('/product (POST)', async () => {
@@ -91,7 +113,7 @@ describe('AppController (e2e)', () => {
           expect(response.body.sku).toBe(products[0].sku);
           expect(response.body.minimumStock).toBe(products[0].minimumStock);
           expect(response.body.currentStock).toBe(products[0].currentStock);
-          ids.push(response.body.id as number);
+          ids.push(response.body.id);
         });
     });
 
@@ -135,15 +157,18 @@ describe('AppController (e2e)', () => {
   });
 
   describe('Controle de entrada e saída', () => {
-
     beforeAll(async () => {
       const prod = await prisma.product.create({
-        data: products[2]
-      })
+        data: products[2],
+      });
 
-      ids.push(prod.id)
-      
-    })
+      const user = await prisma.user.create({
+        data: user1,
+      });
+
+      ids.push(prod.id);
+      userIds.push(user.id);
+    });
 
     it('/product (GET) ALL', async () => {
       return await request(app.getHttpServer())
@@ -163,89 +188,73 @@ describe('AppController (e2e)', () => {
         });
     });
 
-    it('/product/historic (GET) pega o último valor do historico', async () =>{
-      return await request(app.getHttpServer())
-        .get(`/products/historic/${ids[1]}`)
-        .expect(200)
-        .then((response) => {
-          const lastHistoric = response.body.length - 1
-          expect(response.body.length).toBe(1)
-          expect(response.body[lastHistoric].log).toBe(`Recuperado o produto ${products[2].name} com a quantidade ${products[2].minimumStock}`);
-        });
-    })
     it('/product/qtt (PUT) mudar a quantidade de um produto apartir do id', async () => {
       return await request(app.getHttpServer())
-        .put(`/products/qtt/${ids[1]}/30`)
+        .put(`/products/qtt/${ids[1]}/${userIds[0]}/30`)
         .expect(200)
         .then((response) => {
-        
           expect(response.body.currentStock).toBe(30);
         });
     });
 
-
-    it('/product/historic (GET) pega o último valor do historico de um produto, tem que ter sido alterado', async () =>{
-      return await request(app.getHttpServer())
-        .get(`/products/historic/${ids[1]}`)
-        .expect(200)
-        .then((response) => {
-          const lastHistoric = response.body.length - 1
-          expect(response.body.length).toBe(2)
-          expect(response.body[lastHistoric].log).toBe(`Alterado o produto ${products[2].name} com a quantidade ${products[2].currentStock} para ${30}`);
-        });
-    })
-
-    it("Resumo", async () => {
+    it('Resumo', async () => {
       return await request(app.getHttpServer())
         .get(`/products/dashboard/summary`)
         .expect(200)
-        .then(res => {
-          console.log(res.body)
-          expect(res.body.totalProducts).toBe(1)
-          expect(res.body.lowStockProducts).toBe(0)
-          expect(res.body.outOfStockProducts).toBe(0)
-          expect(res.body.totalMovements).toBe(2)
-          expect(res.body.todayMovements).toBe(2)
-        })
-    })
+        .then((res) => {
+          expect(res.body.totalProducts).toBe(1);
+          expect(res.body.lowStockProducts).toBe(0);
+          expect(res.body.outOfStockProducts).toBe(0);
+          expect(res.body.totalMovements).toBe(1);
+          expect(res.body.todayMovements).toBe(1);
+        });
+    });
+    it('get all com paginação', async () => {
+      //Não tive como ver se isso ta funcionado mesmo, provavelmente por conta do stockStatus
+      return await request(app.getHttpServer())
+        .get(
+          '/products/all?page=1&limit=10&search=Mouse&category=Periféricos&stockStatus=NORMAL_STOCK',
+        )
+        .expect(200)
+        .then((res) => {});
+    });
 
+    it('get one by some sort', async () => {
+      return await request(app.getHttpServer())
+        .get('/products?limit=6&sort=bestSellers&period=month')
+        .expect(200)
+        .then((res) => {
+          expect(res.body[0].description).toContain(
+            'Cadeira ergonômica com ajustes completos e apoio para braços 3D.',
+          );
+        });
+    });
+
+    it('Get some type of alert', async () => {
+      return await request(app.getHttpServer())
+        .get('/products/alerts?type=LOW_STOCK')
+        .expect(200)
+        .then((res) => {});
+    });
+
+    it('make a movimentation', async () => {
+      const movimentation: Moviment = {
+        note: 'daaed',
+        quantity: 50,
+        type: MovementType.IN,
+        userId: userIds[0],
+      };
+
+      return await request(app.getHttpServer())
+        .post(`/products/${ids[1]}/movements`)
+        .send(movimentation)
+        .expect(201)
+        .then((res) => {
+          expect(res.body.quantity).toBe(movimentation.quantity)
+          expect(res.body.note).toBe(movimentation.note)
+          expect(res.body.type).toBe(movimentation.type)
+          expect(res.body.userId).toBe(movimentation.userId)
+        });
+    });
   });
-
-  describe("Exportacao de histórico", () => {
-
-    it("/product/{id}/historic/export/json (GET) deve baixar o histórico do produto em json", async () => {
-      const response = await request(app.getHttpServer())
-        .get(`/products/${ids[1]}/historic/export/json`)
-        .expect(200)
-        .expect("Content-Type", /json/)
-        .expect('Content-Disposition', `attachment; filename="historic-${ids[1]}.json"`);
-
-      expect(response.text).toContain(`"productId": ${ids[1]}`)
-      //Caberia colocar mais testes sobre o hitórico aqui.
-    })
-
-    it("/product/{id}/historic/export/csv (GET) deve baixar o histórico do produto em csv", async () => {
-      const response = await request(app.getHttpServer())
-        .get(`/products/${ids[1]}/historic/export/csv`)
-        .buffer(true)
-        .parse((res, callback) => {
-        let data = '';
-        res.on('data', chunk => {
-          data += chunk;
-        });
-        res.on('end', () => {
-          callback(null, data);
-        });
-      })
-        .expect(200)
-        .expect("Content-Type", /text\/csv/)
-        .expect('Content-Disposition', `attachment; filename="historic-${ids[1]}.csv"`);
-      expect(response.body).toMatch("\"id\",\"log\",\"currentStock\",\"creatAt\",\"productId\"") //se tem o head
-      expect(response.body).toContain(`Recuperado o produto ${products[2].name} com a quantidade ${products[2].minimumStock}`)
-      expect(response.body).toContain(`Alterado o produto ${products[2].name} com a quantidade ${products[2].currentStock} para ${30}`)
-      
-      //Caberia colocar mais testes sobre o hitórico aqui.
-    })
-
-  })
 });

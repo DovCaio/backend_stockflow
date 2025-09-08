@@ -8,6 +8,7 @@ import {
   ParseIntPipe,
   Post,
   Put,
+  Query,
   Res,
   UsePipes,
   ValidationPipe,
@@ -15,6 +16,8 @@ import {
 import { ProductService } from './product.service';
 import { Product } from '../models/Product';
 import { Response } from 'express';
+import { Query1, Query2, Query3 } from '../models/Query1';
+import { Moviment } from '../models/Moviment';
 
 @Controller('products')
 @UsePipes(new ValidationPipe({ whitelist: true }))
@@ -28,71 +31,68 @@ export class ProductController {
   }
 
   @Put(':id')
-  updateAproduct(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() product: Product,
-  ) {
+  updateAproduct(@Param('id') id: string, @Body() product: Product) {
     return this.productService.update(id, product);
   }
 
   @Get(':id')
-  getAProduct(@Param('id', ParseIntPipe) id: number) {
+  getAProduct(@Param('id') id: string) {
     return this.productService.get(id);
   }
 
   @Delete(':id')
   @HttpCode(204)
-  deleteAProduct(@Param('id', ParseIntPipe) id: number) {
+  deleteAProduct(@Param('id') id: string) {
     return this.productService.delete(id);
   }
 
   //Controle de entrada e saída
 
-
-  @Get("/dashboard/summary")
-  getDashboardSummry(){
-    return this.productService.dashBoardSummary()
+  @Get('/dashboard/summary')
+  getDashboardSummry() {
+    return this.productService.dashBoardSummary();
   }
 
+  @Get('/all')
+  getAllWithSearch(@Query('page') query: Query1) {
+    console.log(query);
+    console.log('query');
+    return this.productService.seach(query);
+  }
+
+  @Get('/qtt/:id')
+  getQtt(@Param('id') id: string) {
+    return this.productService.getQttById(id);
+  }
+
+  @Put('/qtt/:id/:userID/:newqtt')
+  putQtt(
+    @Param('id') id: string,
+    @Param('userID') userID: string,
+    @Param('newqtt', ParseIntPipe) newQtt: number,
+  ) {
+    return this.productService.putQttById(id, userID, newQtt);
+  }
 
   @Get()
-  getAllProducts(){
-    return this.productService.getAll()
-  } 
-
-
-  @Get("/qtt/:id")
-  getQtt(@Param("id",ParseIntPipe) id:number){
-    return this.productService.getQttById(id)
+  getAllProducts() {
+    return this.productService.getAll();
   }
 
+  @Get()
+  getBySomeCrazyLimit(@Query() query: Query2) {
+    //Ele da o exemplo do best seller, porém para fazer outros tipos de filtro, ou tinha que ser dado eles, ou teria que usar um pln pesado
 
-  @Put("/qtt/:id/:newqtt")
-  putQtt(@Param("id",ParseIntPipe) id:number, @Param("newqtt",ParseIntPipe) newQtt: number){
-    return this.productService.putQttById(id, newQtt)
+    return this.productService.search2(query);
   }
 
-  //Histórico
-
-  @Get("/historic/:prodId")
-  getProductHistorics(@Param("prodId", ParseIntPipe) id:number){
-
-    return this.productService.getProductHistorics(id);
-
+  @Get()
+  getByAlert(@Query() query: Query3) {
+    return this.productService.search3(query);
   }
 
-  //Exportação de hitórico
-  
-  @Get("/:prodId/historic/export/json")
-  async getHistoricJson(@Param("prodId", ParseIntPipe) id:number, @Res() res: Response){
-    return this.productService.exportHistoricJson(id, res)
+  @Post('/:id/movements')
+  getPostMoviments(@Param('id') prodID: string, @Body() body: Moviment) {
+    return this.productService.moviment(body, prodID);
   }
-
-  @Get("/:prodId/historic/export/csv")
-  async getHistoricCsv(@Param("prodId", ParseIntPipe) id:number, @Res() res: Response){
-    return this.productService.exportHistoricCsv(id, res)
-    
-  }
-
-
 }
