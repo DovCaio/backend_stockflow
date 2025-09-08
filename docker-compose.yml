@@ -24,7 +24,7 @@ services:
     profiles: ["test"]
     ports:
         - "3001:3000"
-    command: /bin/sh -c "npx prisma migrate deploy && npm run test:e2e && npm run start:dev"
+    command: /bin/sh -c "npx prisma migrate deploy && npm run test:e2e" #Só para testes, não mexer, se precisa deixar rodando, usar o backend-dev ou o backend-build
     depends_on:
       dev-db:
         condition: service_healthy
