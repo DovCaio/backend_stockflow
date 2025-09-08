@@ -17,13 +17,13 @@ jobs:
       - name: Login in to docker hub
         uses: docker/login-action@v2
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+          username: "${{ secrets.DOCKERHUB_USERNAME }}"
+          password: "${{ secrets.DOCKERHUB_PASSWORD }}"
       
       - name: Build docker image
         run: | 
-          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/stockflow:latest
+          docker build -t "${{ secrets.DOCKERHUB_USERNAME }}/stockflow:latest"
       
       - name: Push Docker image
         run: |
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/stockflow:latest
+          docker push "${{ secrets.DOCKERHUB_USERNAME }}/stockflow:latest"
