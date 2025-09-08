@@ -1,12 +1,12 @@
 import { Body, Injectable } from '@nestjs/common';
-import { Product } from 'src/models/Product';
+import { Product } from '../models/Product';
 import { PrismaService } from '../prisma/prisma.service';
 
 //import { Historic } from '@prisma/client';
 
-import { Query1, Query2, Query3 } from 'src/models/Query1';
+import { Query1, Query2, Query3 } from '../models/Query1';
 import { AlertType, MovementType } from '@prisma/client';
-import { Moviment } from 'src/models/Moviment';
+import { Moviment } from '../models/Moviment';
 
 @Injectable()
 export class ProductService {

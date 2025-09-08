@@ -1,4 +1,4 @@
-import { AlertType } from "@prisma/client"
+import { AlertType, MovementType } from "@prisma/client"
 
 
 export class Query1 {
@@ -18,4 +18,15 @@ export class Query2 {
 
 export class Query3 {
     type: AlertType
+}
+
+
+export class Query4 {
+    page: number
+    limit: number
+    search: string
+    type: MovementType
+    productId: string
+    dateFrom: Date
+    dateTo: Date
 }
