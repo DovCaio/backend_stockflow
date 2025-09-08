@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Body, Injectable } from '@nestjs/common';
 import { Product } from 'src/models/Product';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -6,6 +6,7 @@ import { PrismaService } from '../prisma/prisma.service';
 
 import { Query1, Query2, Query3 } from 'src/models/Query1';
 import { AlertType, MovementType } from '@prisma/client';
+import { Moviment } from 'src/models/Moviment';
 
 @Injectable()
 export class ProductService {
@@ -201,10 +202,23 @@ export class ProductService {
     return this.prisma.product.findMany({
       where: {
           alerts : {
-            some: { //Mais uma vez a limitação do prisma
+            some: { //Mais uma vez a limitação do prisma  
               type: query.type
             }
           }
+      }
+    })
+  }
+
+  async moviment(moviment: Moviment, prodId:string) {
+    return this.prisma.stockMovement.create({
+      data: {
+        quantity: moviment.quantity,
+        productId: prodId,
+        userId: moviment.userId,
+        type: moviment.type,
+        note: moviment.note
+
       }
     })
   }

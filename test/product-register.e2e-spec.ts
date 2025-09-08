@@ -1,10 +1,16 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ConsoleLogger, INestApplication } from '@nestjs/common';
+import {
+  ConsoleLogger,
+  INestApplication,
+  ValidationPipe,
+} from '@nestjs/common';
 import * as request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { Product } from '../src/models/Product';
+import { Moviment } from 'src/models/Moviment';
+import { MovementType } from '@prisma/client';
 
 describe('AppController (e2e)', () => {
   let app: INestApplication<App>;
@@ -60,17 +66,27 @@ describe('AppController (e2e)', () => {
   ];
 
   const user1 = {
-            name: "Usuário1",
-        email: "email@do.user1",
-        password: "123567890"
-  }
+    name: 'Usuário1',
+    email: 'email@do.user1',
+    password: '123567890',
+  };
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
 
-    app = moduleFixture.createNestApplication();
+    app = moduleFixture.createNestApplication({
+      logger: ['error', 'warn', 'log', 'debug', 'verbose'],
+    });
+
+    app.useGlobalPipes(
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+      }),
+    );
 
     prisma = app.get(PrismaService);
 
@@ -83,7 +99,7 @@ describe('AppController (e2e)', () => {
   });
 
   const ids: string[] = [];
-  const userIds: string[] = []
+  const userIds: string[] = [];
 
   describe('CRUD', () => {
     it('/product (POST)', async () => {
@@ -147,11 +163,11 @@ describe('AppController (e2e)', () => {
       });
 
       const user = await prisma.user.create({
-        data: user1
-      })
+        data: user1,
+      });
 
       ids.push(prod.id);
-      userIds.push(user.id)
+      userIds.push(user.id);
     });
 
     it('/product (GET) ALL', async () => {
@@ -193,33 +209,52 @@ describe('AppController (e2e)', () => {
           expect(res.body.todayMovements).toBe(1);
         });
     });
-    it("get all com paginação", async () => { //Não tive como ver se isso ta funcionado mesmo, provavelmente por conta do stockStatus
+    it('get all com paginação', async () => {
+      //Não tive como ver se isso ta funcionado mesmo, provavelmente por conta do stockStatus
       return await request(app.getHttpServer())
-      .get("/products/all?page=1&limit=10&search=Mouse&category=Periféricos&stockStatus=NORMAL_STOCK")
-      .expect(200)
-      .then((res) => {
-        console.log(res.body)
-      })
-    })
+        .get(
+          '/products/all?page=1&limit=10&search=Mouse&category=Periféricos&stockStatus=NORMAL_STOCK',
+        )
+        .expect(200)
+        .then((res) => {});
+    });
 
-    it("get one by some sort", async () => {
+    it('get one by some sort', async () => {
       return await request(app.getHttpServer())
-      .get("/products?limit=6&sort=bestSellers&period=month")
-      .expect(200)
-      .then((res) => {
-        console.log(res.body)
-        expect(res.body[0].description).toContain("Cadeira ergonômica com ajustes completos e apoio para braços 3D.")
-      })
-    })
+        .get('/products?limit=6&sort=bestSellers&period=month')
+        .expect(200)
+        .then((res) => {
+          expect(res.body[0].description).toContain(
+            'Cadeira ergonômica com ajustes completos e apoio para braços 3D.',
+          );
+        });
+    });
 
-    it("Get some type of alert", async () => {
+    it('Get some type of alert', async () => {
       return await request(app.getHttpServer())
-      .get("/products/alerts?type=LOW_STOCK")
-      .expect(200)
-      .then((res) => {
-        console.log(res.body)
-      })
-    })
+        .get('/products/alerts?type=LOW_STOCK')
+        .expect(200)
+        .then((res) => {});
+    });
 
+    it('make a movimentation', async () => {
+      const movimentation: Moviment = {
+        note: 'daaed',
+        quantity: 50,
+        type: MovementType.IN,
+        userId: userIds[0],
+      };
+
+      return await request(app.getHttpServer())
+        .post(`/products/${ids[1]}/movements`)
+        .send(movimentation)
+        .expect(201)
+        .then((res) => {
+          expect(res.body.quantity).toBe(movimentation.quantity)
+          expect(res.body.note).toBe(movimentation.note)
+          expect(res.body.type).toBe(movimentation.type)
+          expect(res.body.userId).toBe(movimentation.userId)
+        });
+    });
   });
 });
