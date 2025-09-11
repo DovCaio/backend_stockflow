@@ -20,7 +20,7 @@ services:
     build:
       context: .
       target: test
-    container_name: container-backend
+    container_name: ct-test-backend
     profiles: ["test"]
     ports:
         - "3001:3000"
@@ -38,7 +38,7 @@ services:
       context: .
       target: test
     profiles: ["develop"]
-    container_name: container-backend
+    container_name: ct-dev-backend
     ports:
         - "3001:3000"
     command: /bin/sh -c "npx prisma migrate dev && npm run start:dev"
@@ -55,9 +55,10 @@ services:
       context: .
       target: prod
     profiles: ["build"]
-    container_name: container-backend
+    container_name: ct-build-backend
     ports:
         - "3001:3000"
+    command: /bin/sh -c "npm run start:prod"
     depends_on:
       dev-db:
         condition: service_healthy
@@ -66,8 +67,6 @@ services:
        - stockflow-network
     environment:
        - DATABASE_URL=${DATABASE_URL}
-
-
 
 networks:
   stockflow-network:

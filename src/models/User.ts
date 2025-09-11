@@ -1,7 +1,7 @@
 import { Exclude } from 'class-transformer';
 enum Role {
-  ADMIN = "ADMIN",
-  USER = "USER",
+  ADMIN = 'ADMIN',
+  USER = 'USER',
 }
 
 export class User {

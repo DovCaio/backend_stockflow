@@ -22,7 +22,7 @@ jobs:
       
       - name: Build docker image
         run: | 
-          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/stockflow:latest
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/stockflow:latest .
       
       - name: Push Docker image
         run: |

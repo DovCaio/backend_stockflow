@@ -1,5 +1,5 @@
 import { MovementType } from '@prisma/client';
-import { IsEnum, IsInt, IsString, IsUUID } from 'class-validator';
+import { IsEnum, IsInt, IsOptional, IsString } from 'class-validator';
 
 export class Moviment {
   @IsEnum(MovementType)
@@ -7,6 +7,7 @@ export class Moviment {
   @IsInt()
   quantity: number;
   @IsString()
+  @IsOptional()
   note: string;
   @IsString()
   userId: string; //Precisa disso também para criar a movimentação do jeito que ta la no schema
