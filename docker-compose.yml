@@ -55,9 +55,10 @@ services:
       context: .
       target: prod
     profiles: ["build"]
-    container_name: container-backend
+    container_name: ct-build-backend
     ports:
         - "3001:3000"
+    command: /bin/sh -c "npm run start:prod"
     depends_on:
       dev-db:
         condition: service_healthy
