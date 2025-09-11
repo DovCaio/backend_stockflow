@@ -3,7 +3,7 @@ import { IsDate, IsInt, IsNumber, IsOptional, IsString } from 'class-validator';
 export class Product {
   @IsString()
   @IsOptional()
-  id?: string
+  id?: string;
   @IsString()
   name: string;
   @IsString()
@@ -22,12 +22,12 @@ export class Product {
   category?: string | null;
 
   @IsNumber()
-  price: number
+  price: number;
 
   @IsDate()
   @IsOptional()
-  createAt?: Date
+  createAt?: Date;
   @IsDate()
   @IsOptional()
-  updateAt?: Date
+  updateAt?: Date;
 }
