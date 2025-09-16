@@ -8,7 +8,8 @@ import { PrismaService } from '../src/prisma/prisma.service';
 import { UserService } from '../src/user/user.service';
 import { ProductService } from '../src/product/product.service';
 import { Moviment } from '../src/models/Moviment';
-import { MovementType } from '@prisma/client';
+import { MovementType, Role } from '@prisma/client';
+import { CreateUserDto } from '../src/models/CreateUserDto';
 describe('movementes tests', () => {
   let app: INestApplication<App>;
   let prisma: PrismaService;
@@ -37,9 +38,10 @@ describe('movementes tests', () => {
       price: 1599.5,
     };
 
-    const user1 = {
+    const user1 : CreateUserDto= {
       name: 'Usuário1',
       email: 'email@do.user2',
+      role: Role.USER,
       password: '123567890',
     };
 
