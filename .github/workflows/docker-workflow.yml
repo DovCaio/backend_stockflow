@@ -35,7 +35,7 @@ jobs:
           WORKSPACE_ID=$(curl -s \
             -H "Authorization: Bearer $TFC_TOKEN" \
             -H "Content-Type: application/vnd.api+json" \
-            https://app.terraform.io/api/v2/organizations/stockflow-workspace/workspaces/stockflow-workspace \
+            https://app.terraform.io/api/v2/organizations/stockflow-backend/workspaces/stockflow-workspace \
             | jq -r '.data.id')
 
           # Pega o ID da variável backend_image
