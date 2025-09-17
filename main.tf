@@ -1,35 +1,80 @@
 terraform {
   required_providers {
+    google = {
+      source  = "hashicorp/google"
+      version = "5.0.0"
+    }
     docker = {
-      source  = "kreuzwerker/docker"
-      version = "3.6.2"
+      source = "kreuzwerker/docker"
     }
   }
+
+
+  cloud { 
+    
+    organization = "stockflow-backend" 
+
+    workspaces { 
+      name = "stockflow-workspace" 
+    } 
+  } 
 }
 
-variable "db_name" {
-  type    = string
-  default = "stockflow_db"
+provider "google" {
+  project     = var.gcp_project
+  region      = var.gcp_region
+    credentials = var.gcp_credentials_json
 }
 
-variable "db_user" {
-  type    = string
-  default = "stockflow"
+
+resource "google_compute_firewall" "allow_http" {
+  name    = "allow-http"
+  network = "default"
+
+  direction     = "INGRESS"
+  source_ranges = ["0.0.0.0/0"]  # qualquer IP externo
+
+  allow {
+    protocol = "tcp"
+    ports    = ["80"]
+  }
+
+  target_tags = ["nginx-server"]  # tag associada à VM
 }
 
-variable "db_password" {
-  type    = string
-  default = "anhardpassword"
+resource "google_compute_instance" "vm" {
+  name         = "stockflow-vm"
+  machine_type = "e2-medium"
+  zone         = var.gcp_zone
+
+  boot_disk {
+    initialize_params {
+      image = "ubuntu-os-cloud/ubuntu-2204-lts"
+    }
+  }
+
+  network_interface {
+    network       = "default"
+    access_config {}
+  }
+
+  metadata = {
+    ssh-keys = "${var.vm_user}:${file("${pathexpand("~/.ssh/id_rsa.pub")}")}"
+  }
+  tags = ["nginx-server"]
+
 }
 
-provider "docker" {}
+provider "docker" {
+  host = "ssh://${var.vm_user}@${var.gcp_vm_ip}"
+}
 
 resource "docker_network" "stock_network" {
   name = "stock_network"
 }
 
 resource "docker_image" "postgres" {
-  name = "postgres:15"  # versão do Postgres
+  name = "postgres:15"
 }
 
 resource "docker_container" "postgres" {
@@ -48,22 +93,13 @@ resource "docker_container" "postgres" {
 
   ports {
     internal = 5432
-  }
-
-  volumes {
-    container_path = "/var/lib/postgresql/data"
+    external = 5432
   }
 }
 
 resource "docker_image" "backend" {
-  name = "meu_backend:latest"
-  build {
-    context    = "${path.module}"
-    dockerfile = "Dockerfile"
-    target = "prod"
-  }
+  name = "dovcaio/stockflow:latest"
 }
-
 
 resource "docker_container" "backend" {
   image = docker_image.backend.image_id
@@ -80,15 +116,18 @@ resource "docker_container" "backend" {
   ports {
     internal = 3000
   }
+
 }
 
+
+
+
 resource "docker_image" "nginx" {
-    name = "nginx:latest"
-    keep_locally = false
+  name = "nginx:latest"
 }
 
 resource "docker_container" "nginx" {
-  image = "nginx:latest"
+  image = docker_image.nginx.image_id
   name  = "nginx_proxy"
 
   ports {
@@ -97,7 +136,7 @@ resource "docker_container" "nginx" {
   }
 
   volumes {
-    host_path      = "/home/caiojhonatanalvespereira/devops/projetoDaDisciplina/stockflow/nginx.conf"
+    host_path      = var.nginx_conf_host_path
     container_path = "/etc/nginx/conf.d/default.conf"
   }
 
