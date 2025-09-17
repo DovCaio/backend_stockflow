@@ -8,6 +8,16 @@ terraform {
       source = "kreuzwerker/docker"
     }
   }
+
+
+  cloud { 
+    
+    organization = "stockflow-backend" 
+
+    workspaces { 
+      name = "stockflow-workspace" 
+    } 
+  } 
 }
 
 provider "google" {

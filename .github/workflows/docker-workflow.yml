@@ -22,8 +22,34 @@ jobs:
       
       - name: Build docker image
         run: | 
-          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/stockflow:latest .
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/stockflow:${GITHUB_SHA} .
       
       - name: Push Docker image
         run: |
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/stockflow:latest
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/stockflow:${GITHUB_SHA}
+      - name: Update Terraform Cloud variable
+        env:
+          TFC_TOKEN: ${{ secrets.TFC_TOKEN }}
+          IMAGE_TAG: ${{ secrets.DOCKERHUB_USERNAME }}/stockflow:${GITHUB_SHA}
+        run: |
+          # Pega o ID do workspace
+          WORKSPACE_ID=$(curl -s \
+            -H "Authorization: Bearer $TFC_TOKEN" \
+            -H "Content-Type: application/vnd.api+json" \
+            https://app.terraform.io/api/v2/organizations/minha-org/workspaces/stockflow-workspace \
+            | jq -r '.data.id')
+
+          # Pega o ID da variável backend_image
+          VAR_ID=$(curl -s \
+            -H "Authorization: Bearer $TFC_TOKEN" \
+            -H "Content-Type: application/vnd.api+json" \
+            https://app.terraform.io/api/v2/workspaces/$WORKSPACE_ID/vars \
+            | jq -r '.data[] | select(.attributes.key=="backend_image") | .id')
+
+          # Atualiza a variável com a nova imagem
+          curl -s \
+            -X PATCH \
+            -H "Authorization: Bearer $TFC_TOKEN" \
+            -H "Content-Type: application/vnd.api+json" \
+            -d "{\"data\":{\"id\":\"$VAR_ID\",\"type\":\"vars\",\"attributes\":{\"value\":\"$IMAGE_TAG\",\"hcl\":false,\"category\":\"terraform\"}}}" \
+            https://app.terraform.io/api/v2/workspaces/$WORKSPACE_ID/vars
