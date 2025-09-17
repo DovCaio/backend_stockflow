@@ -32,7 +32,6 @@ jobs:
           TFC_TOKEN: ${{ secrets.TFC_TOKEN }}
           IMAGE_TAG: ${{ secrets.DOCKERHUB_USERNAME }}/stockflow:${GITHUB_SHA}
         run: |
-          # Pega o ID do workspace
           WORKSPACE_ID=$(curl -s \
             -H "Authorization: Bearer $TFC_TOKEN" \
             -H "Content-Type: application/vnd.api+json" \
