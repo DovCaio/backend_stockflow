@@ -98,7 +98,7 @@ resource "docker_container" "postgres" {
 }
 
 resource "docker_image" "backend" {
-  name = "dovcaio/stockflow:latest"
+  name = var.backend_image
 }
 
 resource "docker_container" "backend" {

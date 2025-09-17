@@ -52,3 +52,7 @@ variable "gcp_vm_ip" {
   type      = string
   sensitive = true
 }
+
+variable "backend_image" {
+  type = string
+}
