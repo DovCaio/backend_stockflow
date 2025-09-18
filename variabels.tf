@@ -39,7 +39,7 @@ variable "db_password" {
 }
 
 variable "nginx_conf_host_path" {
-  default     = "/home/caiojhonatanalvespereira/devops/projetoDaDisciplina/stockflow/nginx.conf"
+  default     = "/home/ubuntu/nginx.conf"
   description = "Caminho do arquivo de configuração do Nginx no host"
 }
 

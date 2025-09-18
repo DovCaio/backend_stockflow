@@ -66,7 +66,7 @@ resource "google_compute_instance" "vm" {
 }
 
 provider "docker" {
-  host = "ssh://${var.vm_user}@${google_compute_instance.vm.network_interface[0].access_config[0].nat_ip}"
+  host = "ssh://ubuntu@34.122.133.99"
   
 }
 
