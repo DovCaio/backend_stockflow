@@ -62,3 +62,8 @@ variable "vm_ssh_key" {
   sensitive = true
 
 }
+
+variable "vm_ssh_private_key" {
+  type = string
+  sensitive = true
+}
