@@ -65,8 +65,18 @@ resource "google_compute_instance" "vm" {
 
 }
 
+resource "local_file" "ssh_key_file" {
+  content         = var.vm_ssh_private_key
+  filename        = "${path.module}/.temp_ssh_key"
+  file_permission = "0600"
+}
+
 provider "docker" {
-  host = "ssh://${var.vm_user}@${var.gcp_vm_ip}"
+  host = "ssh://ubuntu@34.122.133.99"
+  ssh_opts = [
+    "-i ${local_file.ssh_key_file.filename}",
+    "-o StrictHostKeyChecking=no"
+  ]
 }
 
 resource "docker_network" "stock_network" {
