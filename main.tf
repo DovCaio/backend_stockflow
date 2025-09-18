@@ -67,6 +67,7 @@ resource "google_compute_instance" "vm" {
 
 provider "docker" {
   host = "ssh://ubuntu@34.122.133.99"
+  
 }
 
 resource "docker_network" "stock_network" {
