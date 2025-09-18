@@ -59,7 +59,7 @@ resource "google_compute_instance" "vm" {
   }
 
   metadata = {
-    ssh-keys = "${var.vm_user}:${file("${pathexpand("~/.ssh/id_rsa.pub")}")}"
+    ssh-keys = "${var.vm_user}:${var.vm_ssh_key}"
   }
   tags = ["nginx-server"]
 
@@ -118,9 +118,6 @@ resource "docker_container" "backend" {
   }
 
 }
-
-
-
 
 resource "docker_image" "nginx" {
   name = "nginx:latest"

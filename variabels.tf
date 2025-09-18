@@ -56,3 +56,9 @@ variable "gcp_vm_ip" {
 variable "backend_image" {
   type = string
 }
+
+variable "vm_ssh_key" {
+  type = string
+  sensitive = true
+
+}
