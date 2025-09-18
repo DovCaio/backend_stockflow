@@ -44,7 +44,7 @@ jobs:
             -H "Content-Type: application/vnd.api+json" \
             https://app.terraform.io/api/v2/workspaces/$WORKSPACE_ID/vars \
             | jq -r '.data[] | select(.attributes.key=="backend_image") | .id')
-
+          echo "$VAR_ID"
           # Atualiza a variável com a nova imagem
           curl -s \
             -X PATCH \
