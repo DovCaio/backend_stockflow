@@ -23,7 +23,7 @@ terraform {
 provider "google" {
   project     = var.gcp_project
   region      = var.gcp_region
-    credentials = var.gcp_credentials_json
+  credentials = var.gcp_credentials_json
 }
 
 
@@ -66,7 +66,7 @@ resource "google_compute_instance" "vm" {
 }
 
 provider "docker" {
-  host = "ssh://ubuntu@34.122.133.99"
+  host = "ssh://${var.vm_user}@${google_compute_instance.vm.network_interface[0].access_config[0].nat_ip}"
   
 }
 
