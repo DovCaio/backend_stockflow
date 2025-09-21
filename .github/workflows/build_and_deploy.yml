@@ -51,3 +51,22 @@ jobs:
             -H "Content-Type: application/vnd.api+json" \
             -d "{\"data\":{\"id\":\"$VAR_ID\",\"type\":\"vars\",\"attributes\":{\"value\":\"$IMAGE_TAG\",\"hcl\":false,\"category\":\"terraform\"}}}" \
             https://app.terraform.io/api/v2/workspaces/$WORKSPACE_ID/vars
+          # Cria um run para aplicar a mudança
+          curl -s -X POST \
+            -H "Authorization: Bearer $TFC_TOKEN" \
+            -H "Content-Type: application/vnd.api+json" \
+            -d "{
+              \"data\": {
+                \"attributes\": {
+                  \"message\": \"Run iniciado automaticamente para aplicar backend_image=$IMAGE_TAG\",
+                  \"is-destroy\": false
+                },
+                \"type\": \"runs\",
+                \"relationships\": {
+                  \"workspace\": {
+                    \"data\": { \"type\": \"workspaces\", \"id\": \"$WORKSPACE_ID\" }
+                  }
+                }
+              }
+            }" \
+            https://app.terraform.io/api/v2/runs
